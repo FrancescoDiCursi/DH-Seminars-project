@@ -18,6 +18,7 @@ export default {
       target_chap: "",
       target_verse:"",
       target_verses:[],
+      displayable_verses:[],
       folders: ["Easy-to-Read Version__American", "Unlocked Literal Bible__","Young's Literal Translation__archaic British"],
       //target_files: "",
       files: [
@@ -159,7 +160,7 @@ export default {
           "65-Jude",
           "66-Revelation",
         ],
-        [/* */ "All",
+        [/* Young's Literal Translation__archaic British*/ "All",
         '1-Genesis',
  '2-Exodus',
  '3-Leviticus',
@@ -239,6 +240,7 @@ export default {
   methods: {
     read_file(dirname) {
       //this.loaded_file=[]
+      
       if (this.target_file == "All") {
         var file_list = this.target_files.slice(1);
         
@@ -253,8 +255,9 @@ export default {
       ).then((csvs) => {
         //this.loaded_file=[]
         csvs.map((f,i) => this.loaded_file.push(f));
-        console.log("LOADED", this.loaded_file);
+        console.log("LOADED", this.loaded_file[-1]);
       });
+      
       //this.target_chap = "";
       //this.target_chaps = [];
       if (this.target_file == "All") {
@@ -263,9 +266,7 @@ export default {
         return;
       } else {
         //handle chapters
-        var chap_list_temp = this.loaded_file.map((file) =>
-          file.map((f) => f["Chapter"])
-        );
+        var chap_list_temp = this.loaded_file.map(d=>d.map(y=>y['Chapter']))
         
         console.log(chap_list_temp);
         chap_list_temp = [
@@ -283,18 +284,71 @@ export default {
       }
     },
     handle_verses(){
-        console.log(this.loaded_file)
+        console.log('starting handle verses',this.loaded_file)
+        console.log('INFOS', this.target_folder, this.target_folder_idx, this.target_file, this.target_chap, this.target_verse)
         if (this.target_file!='All'){
             
-            this.target_verses=['asd']
-            this.target_verse=this.target_verses[0]
             
-            var temp_filt=this.loaded_file.filter(y=>y['Chapter']=this.target_chap)
-            console.log(temp_filt)
+            var temp_edition=this.target_folder
+            var temp_book=this.target_file.split('-').slice(1,)
+            var temp_chap=this.target_chap
+            
+            console.log(temp_book)
+            
+            var temp_filt=this.loaded_file.map(d=>d.filter(function(y){
+              if (y['Edition']==temp_edition){
+              if(y['Book']==temp_book){
+              if (y['Chapter']==String(temp_chap)){
+                
+                return y
+              }
+              else{
+                return ''
+              }
+            }}}))
+
+            temp_filt=temp_filt.filter(function(y){
+              if (y.length>0){
+                return y
+              }
+            })
+
+            temp_filt=temp_filt[0] //in case of duplicate dfs //need to understand how to empty the loaded files, now works only if All is selected as chapter
+            var temp_verses=temp_filt.map(d=>d['Verse'])
+            this.target_verses=temp_verses.map(d=>d.split(' ')[0])//verses idx
+
+            //CONTINUA DA QUI: ULTIMO FILTRO PER I VERSI
+           var temp_target_verse=this.target_verse
+            console.log(temp_target_verse)
+            var filtered_verses=temp_verses.filter(function(d){
+              if (d.split(' ')[0]==String(temp_target_verse)){
+                return d
+              }
+            })
+            this.displayable_verses=filtered_verses
+            
+            //this.displayable_verses=temp_verses
+
+            console.log('VERSES',temp_verses)
         }
         else{
-            this.target_verses=[]
-            this.target_verse=''
+          var temp_filt=this.loaded_file.map(d=>d.filter(function(y){
+              if (y['Edition']==temp_edition){
+              if(y['Book']==temp_book){
+                return y
+              }}}))
+              temp_filt=temp_filt.filter(function(y){
+              if (y.length>0){
+                return y
+              }
+            })
+
+            temp_filt=temp_filt[0] //in case of duplicate dfs //need to understand how to empty the loaded files, now works only if All is selected as chapter
+            var temp_verses=temp_filt.map(d=>d['Verse'])
+            this.target_verses=temp_verses.map(d=>d.split(' ')[0])//verses idx
+
+            this.target_verses=temp_filt
+            this.target_verse=this.target_verse[0]
         }
         
 
@@ -309,17 +363,22 @@ export default {
     target_folder: function () {
         console.log('changed targert')
         this.target_verses=[]
+        this.loaded_file=[]
         this.target_files=[]
         console.log(this.loaded_files)
       this.target_folder_idx = this.folders.indexOf(this.target_folder);
       this.target_files = this.files[this.target_folder_idx];
       this.target_file = this.target_files[0]; //0==All
-      this.target_chaps = this.chaps[this.target_chap];
-      this.target_chap = this.target_chaps;
+      //this.target_chaps = this.chaps[this.target_chap];
+      //this.target_chap = this.target_chaps;
     },
     target_file: function () {
 
-
+      if (this.target_file=='All'){
+        this.target_chaps=[]
+        this.target_verses=[]
+        this.displayable_verses=[]
+      }
       // this.target_file_idx= this.files.indexOf(this.target_file) //All at 0
       //this.target_chaps = this.chaps[this.target_chap];
       //this.target_chap = this.target_chaps;
@@ -330,19 +389,21 @@ export default {
       //this.loaded_file=[]
 
       console.log('changed')
-      if (this.target_file!='All'){
-        
-      this.handle_verses()
-      }
+
 
     },
-    target_chaps: function(){
+    target_chap: function(){
+        this.target_verses=[]
+        this.target_verse=this.target_verses[0]
+        this.displayable_verses=[]
         console.log('changed')
         this.handle_verses()
+        
 
     },
     target_verse: function(){
         console.log('verse changed')
+        this.handle_verses()
     },
   },
 };
@@ -376,8 +437,24 @@ export default {
         ></b-form-select>
       </b-form-group>
     </b-form>
+
+    <div id="verses">
+      <b-list-group>
+        <b-list-group-item v-for="(verse,i) in this.displayable_verses" :key="i+verse">
+          <b-badge class="badges" variant="danger" :name="i" pill>{{verse.split(' ')[0]}}</b-badge>
+          {{verse.split(' ').splice(1,).join(' ')}}</b-list-group-item>
+      </b-list-group>
+    </div>
   </div>
 </template>
 
 <style>
+  .badges{
+    background-color: blue;
+    border-radius: 100%;
+    
+  }
+  .badges:hover{
+    background-color: red
+  }
 </style>
