@@ -83,10 +83,7 @@ export default {
 </template>
 
 <style scoped>
-body{
-  text-align: justify;
-  justify-content: center;
-}
+
 #navbrand{
   margin-left:2rem
 }
