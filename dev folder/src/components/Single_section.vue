@@ -1,12 +1,13 @@
 <script>
 import Vue from "vue";
-import * as plotly from "https://cdn.plot.ly/plotly-2.11.1.min.js";
+
 import * as d3 from "https://cdn.skypack.dev/d3@7";
 import * as unique from "array-unique-deep";
+import Scatterplot_freq from "./Scatterplot_freq.vue";
 
 export default {
   name: "Single_section",
-  components: {},
+  components: { Scatterplot_freq },
   data() {
     return {
       temp_file_list: [],
@@ -19,8 +20,12 @@ export default {
       target_verse: "",
       target_verses: [],
       displayable_verses: [],
-      badge_chaps:[],
-      start_flag:false,
+      token_list:[],
+      badge_chaps: [],
+      start_flag: false,
+      loading_status:true,
+      freq_:{}, //count token's frequency
+      freq_status:false,
       folders: [
         "Easy-to-Read Version__American",
         "Unlocked Literal Bible__",
@@ -245,221 +250,269 @@ export default {
   mounted() {
     //this.target_folder=this.folders[0]
     //crea file unici su python, uno per ogni edizione al massimo, se non uno totale
-    Promise.all(this.folders.map(d=>d3.csv("./static/" + d + ".csv"))).then((csvs)=>{
-      this.loaded_file.push(csvs[0])
-      this.loaded_file.push(csvs[1])
-      this.loaded_file.push(csvs[2])
-      
-
-    })
-   
-
-    
+    Promise.all(this.folders.map((d) => d3.csv("./static/" + d + ".csv"))).then(
+      (csvs) => {
+        this.loaded_file.push(csvs[0]);
+        this.loaded_file.push(csvs[1]);
+        this.loaded_file.push(csvs[2]);
+      }
+    );
   },
   methods: {
-    handle_verses(){
-      this.displayable_verses=[]
-        var temp_file=this.loaded_file[this.folders.indexOf(this.target_folder)]
-        var temp_book=this.target_file
-        var temp_chap=this.target_chap
-        var temp_verse=this.target_verse
-        console.log('handle verses',temp_file)
 
-        //filt by book
-        temp_file=temp_file.filter(function(d){
-          if (temp_book=='All'){
-            return d
-          }else if (temp_book!='All'){
-            if (d['Book']==temp_book){
-              return d
-            }
+    tokenize(){
+      var temp_text=this.displayable_verses.join(' ') //remove verse idx and merge
+      this.token_list=temp_text.split(/\W+/)
+      console.log(this.token_list)
+
+      //make x and y for freq plot
+      var token_keys=[... new Set(this.token_list)]
+      var freq_counter={}
+      for(var each of this.token_list){
+        if(isNaN(freq_counter[each])){
+          freq_counter[each]=1
+        }else{
+          freq_counter[each]+=1
+        }
+      }
+      this.freq_=freq_counter
+      this.freq_status=true
+      console.log(freq_counter)
+      console.log(Object.keys(freq_counter), Object.values(freq_counter))
+
+    },
+   
+    handle_verses() {
+      this.displayable_verses = [];
+      var temp_file =
+        this.loaded_file[this.folders.indexOf(this.target_folder)];
+      var temp_book = this.target_file;
+      var temp_chap = this.target_chap;
+      var temp_verse = this.target_verse;
+      console.log("handle verses", temp_file);
+
+      //filt by book
+      temp_file = temp_file.filter(function (d) {
+        if (temp_book == "All") {
+          return d;
+        } else if (temp_book != "All") {
+          if (d["Book"] == temp_book) {
+            return d;
           }
-        })
+        }
+      });
 
-        //filt by chap
-        temp_file=temp_file.filter(function(d){
-          if (temp_chap=='All'){
-            return d3
-          }else if (temp_chap!='All'){
-            if(d['Chapter']==temp_chap){
-              return d
-            }
+      //filt by chap
+      temp_file = temp_file.filter(function (d) {
+        if (temp_chap == "All") {
+          return d3;
+        } else if (temp_chap != "All") {
+          if (d["Chapter"] == temp_chap) {
+            return d;
           }
-        })
-        console.log(temp_file)
+        }
+      });
+      console.log(temp_file);
 
-        //filt by verse
-        temp_file=temp_file.filter(function(d){
-          if (temp_verse=='All'){
-            return d
-          }else if (temp_verse!='All'){
-            if(d['Verse'].split(' ')[0]==String(temp_verse)){
-              return d
-            }
+      //filt by verse
+      temp_file = temp_file.filter(function (d) {
+        if (temp_verse == "All") {
+          return d;
+        } else if (temp_verse != "All") {
+          if (d["Verse"].split(" ")[0] == String(temp_verse)) {
+            return d;
           }
-        })
+        }
+      });
 
-        
-
-        //there are dupliacate verse, take half the length
-        temp_file=temp_file.slice(0,temp_file.length/2)
-        this.displayable_verses=temp_file.map(d=>[d['Book'],d['Chapter'],d['Verse']])
-
-    }
+      //there are dupliacate verse, take half the length
+      temp_file = temp_file.slice(0, temp_file.length / 2);
+      this.displayable_verses = temp_file.map((d) => [
+        d["Book"],
+        d["Chapter"],
+        d["Verse"],
+      ]);
+    },
   },
   watch: {
     loaded_file: function () {
-
       console.log("changed", this.loaded_file);
       //this.target_files=[... new Set(this.loaded_file[this.folders.indexOf(this.target_folder)].map(d=>d['Book']))]
-      this.target_folder=''
-      this.target_folder=this.folders[0]
-
+      this.target_folder = "";
+      this.target_folder = this.folders[0];
     },
-    target_folder: function(){
-
-      this.target_files=['All',... new Set(this.loaded_file[this.folders.indexOf(this.target_folder)].map(d=>d['Book']))]
-      this.target_file=''
-      this.target_file=this.target_files[0]
-      if (this.start_flag==true){
-        this.handle_verses()
+    target_folder: function () {
+      this.target_files = [
+        "All",
+        ...new Set(
+          this.loaded_file[this.folders.indexOf(this.target_folder)].map(
+            (d) => d["Book"]
+          )
+        ),
+      ];
+      this.target_file = "";
+      this.target_file = this.target_files[0];
+      if (this.start_flag == true) {
+        this.handle_verses();
       }
+    },
+    target_file: function () {
+      var temp_chaps = this.loaded_file[
+        this.folders.indexOf(this.target_folder)
+      ].filter((d) => {
+        if (d["Book"] == this.target_file) {
+          return d["Chapter"];
+        }
+      });
+      this.target_chaps = [
+        "All",
+        ...new Set(temp_chaps.map((d) => d["Chapter"])),
+      ];
+      this.target_chap = "";
+      this.target_chap = this.target_chaps[0];
+      console.log(this.target_chaps);
+      if (this.start_flag == true) {
+        this.handle_verses();
+      }
+    },
+    target_chap: function () {
+      var temp_verses = this.loaded_file[
+        this.folders.indexOf(this.target_folder)
+      ].filter((d) => {
+        if (d["Book"] == this.target_file) {
+          if (d["Chapter"] == this.target_chap) {
+            return d["Verse"];
+          }
+        }
+      });
+
+      this.target_verses = [
+        "All",
+        ...temp_verses.map((d) => d["Verse"].split(" ")[0]),
+      ];
+      this.target_verse = "";
+      this.target_verse = this.target_verses[0];
+      if (this.start_flag == true) {
+        this.handle_verses();
+      }
+    },
+    target_verse: function () {
+      //comment out "this.handle_verses" if don't want to load all verses at start
+      this.handle_verses()
+      this.start_flag = true;
+      this.loading_status=false
+      this.tokenize()
 
       
     },
-    target_file: function(){
-
-      var temp_chaps=this.loaded_file[this.folders.indexOf(this.target_folder)].filter(d=>{
-        if (d['Book']==this.target_file){
-          return d['Chapter']
-        }
-      })
-      this.target_chaps=['All',... new Set(temp_chaps.map(d=>d['Chapter']))]
-      this.target_chap=''
-      this.target_chap=this.target_chaps[0]
-      console.log(this.target_chaps)
-      if (this.start_flag==true){
-        this.handle_verses()
-      }
-
+    freq_: function () {
+      console.log(this.freq_)
     },
-    target_chap:function(){
-
-    var temp_verses=this.loaded_file[this.folders.indexOf(this.target_folder)].filter(d=>{
-      if(d['Book']==this.target_file){
-        if (d['Chapter']==this.target_chap){
-          return d['Verse']
-
-        }
-      }
-    })
-
-    this.target_verses=['All',... temp_verses.map(d=>d['Verse'].split(' ')[0])]
-    this.target_verse=''
-    this.target_verse=this.target_verses[0]
-    if (this.start_flag==true){
-        this.handle_verses()
-      }
-    },
-    target_verse:function(){
-        //comment out "this.handle_verses" if don't want to load all verses at start
-        this.handle_verses()
-        this.start_flag=true
-
-
-
-    }
   },
 };
 </script>
     
     <template>
-  <div id="single_page">
+  <div id="single_section" >
+    <div>
+      <b-spinner v-if="loading_status"
+        id="single_section_spinner"
+        label="Loading..."
+      ></b-spinner>
+      <span v-else></span>
+    </div>
     SINGLE
     <b-container>
       <b-row>
-    <b-form>
-      <b-form-group>
-        <b-form-select
-          v-model="target_folder"
-          :options="folders"
-          id="folder_selector"
-        ></b-form-select>
-        <b-form-select
-          v-model="target_file"
-          :options="target_files"
-          id="book_selector"
-        ></b-form-select>
-        <b-form-select
-          v-model="target_chap"
-          :options="target_chaps"
-          id="chap_selector"
-        ></b-form-select>
-        <b-form-select
-          v-model="target_verse"
-          :options="target_verses"
-          id="verse_selector"
-        ></b-form-select>
-      </b-form-group>
-    </b-form>
-  </b-row>
-  <b-row>
-    <div id="verses">
-      <b-list-group>
-        <b-list-group-item class="list_item"
-          v-for="(verse, i) in this.displayable_verses"
-          :key="i + verse[2]"
-        >
-          <b-badge class="book_badges" pill>{{verse[0]}}</b-badge>
-          <b-badge class="chap_badges" pill>{{verse[1]}}</b-badge>
-          <b-badge class="verse_badges" pill>{{
-            verse[2].split(" ")[0]
-          }}</b-badge>
-          {{ verse[2].split(" ").splice(1).join(" ") }}</b-list-group-item
-        >
-      </b-list-group>
-    </div>
-  </b-row>
-  </b-container>
-
+        <b-form>
+          <b-form-group>
+            <b-form-select @click="this.loading_status=true"
+              v-model="target_folder"
+              :options="folders"
+              id="folder_selector"
+            ></b-form-select>
+            <b-form-select
+              v-model="target_file"
+              :options="target_files"
+              id="book_selector"
+            ></b-form-select>
+            <b-form-select
+              v-model="target_chap"
+              :options="target_chaps"
+              id="chap_selector"
+            ></b-form-select>
+            <b-form-select
+              v-model="target_verse"
+              :options="target_verses"
+              id="verse_selector"
+            ></b-form-select>
+          </b-form-group>
+        </b-form>
+      </b-row>
+      <b-row>
+        <div id="verses">
+          <b-list-group>
+            <b-list-group-item
+              class="list_item"
+              v-for="(verse, i) in this.displayable_verses"
+              :key="i + verse[2]"
+            >
+              <b-badge class="book_badges" pill>{{ verse[0] }}</b-badge>
+              <b-badge class="chap_badges" pill>{{ verse[1] }}</b-badge>
+              <b-badge class="verse_badges" pill>{{
+                verse[2].split(" ")[0]
+              }}</b-badge>
+              {{ verse[2].split(" ").splice(1).join(" ") }}</b-list-group-item
+            >
+          </b-list-group>
+        </div>
+      </b-row>
+    
+      <b-row>
+        <Scatterplot_freq v-if="freq_status"  :freq_="this.freq_"></Scatterplot_freq>
+      </b-row>
+    </b-container>
   </div>
 </template>
     
     <style>
-.verse_badges,.chap_badges {
+.verse_badges,
+.chap_badges {
   border-radius: 100%;
 }
-.verse_badges{
+.verse_badges {
   background-color: blue;
 }
-.chap_badges{
-  background-color:green
+.chap_badges {
+  background-color: green;
 }
-.book_badges{
+.book_badges {
   background-color: red;
 }
 
-
-#verse_selector{
-  background-color: rgba(15, 10, 222, 0.5)
+#verse_selector {
+  background-color: rgba(15, 10, 222, 0.5);
 }
 
-#chap_selector{
-  background-color: rgba(0, 230, 5, 0.5)
+#chap_selector {
+  background-color: rgba(0, 230, 5, 0.5);
 }
-#book_selector{
-  background-color:rgba(207, 0, 15, 0.5);
-}
-
-.list_item:hover{
-  background-color:rgba(241, 214, 147, 0.5)
+#book_selector {
+  background-color: rgba(207, 0, 15, 0.5);
 }
 
-#verses{
-  
+.list_item:hover {
+  background-color: rgba(241, 214, 147, 0.5);
+}
+
+#verses {
   width: 100%;
   height: 30rem;
-  overflow:hidden;
-   overflow-y:scroll
+  overflow: hidden;
+  overflow-y: scroll;
+}
+
+#single_section{
+  height: 100vw;
 }
 </style>
