@@ -4,10 +4,11 @@ import Vue from "vue";
 import * as d3 from "https://cdn.skypack.dev/d3@7";
 import * as unique from "array-unique-deep";
 import Scatterplot_freq from "./Scatterplot_freq.vue";
+import Distplot_style from "./Distplot_style.vue";
 
 export default {
   name: "Single_section",
-  components: { Scatterplot_freq },
+  components: { Scatterplot_freq, Distplot_style },
   data() {
     return {
       temp_file_list: [],
@@ -20,13 +21,15 @@ export default {
       target_verse: "",
       target_verses: [],
       displayable_verses: [],
-      token_list:[],
+      token_list: [],
       badge_chaps: [],
       start_flag: false,
-      loading_status:true,
-      freq_:{}, //count token's frequency
-      freq_status:false,
-      freq_plot_key:0,
+      loading_status: true,
+      freq_: {}, //count token's frequency
+      grouped_tokens: [], //same as displayable_tokens but with [2]=tokens //count grouped by book and chapter
+      freq_status: false,
+      freq_plot_key: 0,
+      dist_plot_key: 0,
       folders: [
         "Easy-to-Read Version__American",
         "Unlocked Literal Bible__",
@@ -260,36 +263,47 @@ export default {
     );
   },
   methods: {
-    manual_update(val){
-      val+=1
-      console.log(val)
+    manual_update(val) {
+      val += 1;
+      console.log(val);
     },
-    tokenize(){
-      var temp_text=this.displayable_verses.join(' ') //remove verse idx and merge
-      this.token_list=temp_text.split(/\W+/)
-      console.log(this.token_list)
+    tokenize() {
+      //temp_text is for scatter
+      var temp_text = this.displayable_verses.map((d) => d[2]).join(" "); //only verses
+      this.token_list = temp_text.split(/\W+/);
+      console.log(this.token_list);
+      console.log("VERSES", this.displayable_verses);
 
       //make x and y for freq plot
-      var token_keys=[... new Set(this.token_list)]
-      var freq_counter={}
-      for(var each of this.token_list){
-        if(isNaN(freq_counter[each])){
-          freq_counter[each]=1
-        }else{
-          freq_counter[each]+=1
+      var token_keys = [...new Set(this.token_list)];
+      var freq_counter = {};
+      for (var each of this.token_list) {
+        if (isNaN(freq_counter[each])) {
+          freq_counter[each] = 1;
+        } else {
+          freq_counter[each] += 1;
         }
       }
-      this.freq_=freq_counter
-      this.freq_status=true
-      this.freq_plot_key+=1
-      console.log(this.freq_plot_key)
-      console.log(freq_counter)
-      console.log(Object.keys(freq_counter), Object.values(freq_counter))
 
+      //it is for dist
+      var temp_grouped_verses = this.displayable_verses.map((d) => [
+        d[0],
+        d[1],
+        d[2].split(/\W+/),
+      ]);
+      this.grouped_tokens=temp_grouped_verses
+     
+      this.freq_ = freq_counter;
+      this.freq_status = true;
+      this.freq_plot_key += 1;
+      this.dist_plot_key += 1;
+      console.log(this.freq_plot_key);
+      console.log(freq_counter);
+      console.log(Object.keys(freq_counter), Object.values(freq_counter));
     },
-   
+
     handle_verses() {
-      this.freq_stats=false
+      this.freq_stats = false;
       this.displayable_verses = [];
       var temp_file =
         this.loaded_file[this.folders.indexOf(this.target_folder)];
@@ -361,8 +375,8 @@ export default {
       this.target_file = this.target_files[0];
       if (this.start_flag == true) {
         this.handle_verses();
-        this.tokenize()
-        this.loading_status=false
+        this.tokenize();
+        this.loading_status = false;
       }
     },
     target_file: function () {
@@ -382,8 +396,8 @@ export default {
       console.log(this.target_chaps);
       if (this.start_flag == true) {
         this.handle_verses();
-        this.tokenize()
-        this.loading_status=false
+        this.tokenize();
+        this.loading_status = false;
       }
     },
     target_chap: function () {
@@ -405,29 +419,29 @@ export default {
       this.target_verse = this.target_verses[0];
       if (this.start_flag == true) {
         this.handle_verses();
-        this.tokenize()
-        this.loading_status=false
+        this.tokenize();
+        this.loading_status = false;
       }
     },
     target_verse: function () {
       //comment out "this.handle_verses" if don't want to load all verses at start
-      this.handle_verses()
+      this.handle_verses();
       this.start_flag = true;
-      this.tokenize()
-      this.loading_status=false
-      
+      this.tokenize();
+      this.loading_status = false;
     },
     freq_: function () {
-      console.log(this.freq_)
+      console.log(this.freq_);
     },
   },
 };
 </script>
     
     <template>
-  <div id="single_section" >
+  <div id="single_section">
     <div>
-      <b-spinner v-if="loading_status"
+      <b-spinner
+        v-if="loading_status"
         id="single_section_spinner"
         label="Loading..."
       ></b-spinner>
@@ -438,7 +452,8 @@ export default {
       <b-row>
         <b-form inline>
           <b-form-group>
-            <b-form-select @click="this.loading_status=true"
+            <b-form-select
+              @click="this.loading_status = true"
               v-model="target_folder"
               :options="folders"
               id="folder_selector"
@@ -479,10 +494,19 @@ export default {
           </b-list-group>
         </div>
       </b-row>
-    
+
       <b-row>
-        <Scatterplot_freq v-if="freq_status" :key="this.freq_plot_key" :freq_="this.freq_"></Scatterplot_freq>
+        <Scatterplot_freq
+          v-if="freq_status"
+          :key="String(this.freq_plot_key) + 'freq'"
+          :freq_="this.freq_"
+        ></Scatterplot_freq>
         <span v-else></span>
+        <Distplot_style
+          v-if="freq_status"
+          :key="String(this.dist_plot_key) + 'dist'"
+          :tokens_="this.grouped_tokens"
+        ></Distplot_style>
       </b-row>
     </b-container>
   </div>
@@ -524,6 +548,4 @@ export default {
   overflow: hidden;
   overflow-y: scroll;
 }
-
-
 </style>
