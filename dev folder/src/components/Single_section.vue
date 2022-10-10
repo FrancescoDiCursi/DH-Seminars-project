@@ -5,10 +5,11 @@ import * as d3 from "https://cdn.skypack.dev/d3@7";
 import * as unique from "array-unique-deep";
 import Scatterplot_freq from "./Scatterplot_freq.vue";
 import Distplot_style from "./Distplot_style.vue";
+import Scatter_3D from "./Scatter_3D.vue";
 
 export default {
   name: "Single_section",
-  components: { Scatterplot_freq, Distplot_style },
+  components: { Scatterplot_freq, Distplot_style, Scatter_3D },
   data() {
     return {
       temp_file_list: [],
@@ -30,6 +31,7 @@ export default {
       freq_status: false,
       freq_plot_key: 0,
       dist_plot_key: 0,
+      scatter_3d_key:0,
       folders: [
         "Easy-to-Read Version__American",
         "Unlocked Literal Bible__",
@@ -297,6 +299,7 @@ export default {
       this.freq_status = true;
       this.freq_plot_key += 1;
       this.dist_plot_key += 1;
+      this.scatter_3d_key +=1
       console.log(this.freq_plot_key);
       console.log(freq_counter);
       console.log(Object.keys(freq_counter), Object.values(freq_counter));
@@ -372,7 +375,7 @@ export default {
         ),
       ];
       this.target_file = "";
-      this.target_file = this.target_files[0];
+      this.target_file = this.target_files[1];
       if (this.start_flag == true) {
         this.handle_verses();
         this.tokenize();
@@ -501,12 +504,17 @@ export default {
           :key="String(this.freq_plot_key) + 'freq'"
           :freq_="this.freq_"
         ></Scatterplot_freq>
-        <span v-else></span>
+        </b-row>
+        <b-row>
         <Distplot_style
           v-if="freq_status"
           :key="String(this.dist_plot_key) + 'dist'"
           :tokens_="this.grouped_tokens"
         ></Distplot_style>
+      </b-row>
+      <b-row>
+        <Scatter_3D v-if="freq_status"
+        :key="String(this.scatter_3d_key)+ 'scatter_3d'" :verses_="this.displayable_verses"></Scatter_3D>
       </b-row>
     </b-container>
   </div>

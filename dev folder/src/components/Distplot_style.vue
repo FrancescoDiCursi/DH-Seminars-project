@@ -87,6 +87,8 @@ export default {
 
       var verses_idx = this.tokens_.map((d) => d[2][0]);
       var verses = this.tokens_.map((d) => d[2].slice(1));
+
+
       //LEGEND:
       //COORDS=POSITIVE
       //SUBORDS=NEGATIVE
@@ -118,7 +120,20 @@ export default {
         //NEGATIVE
       }
 
-      var color_vals = coords_vals.map((d, i) => d + subord_vals[i]);
+      var colors_temp = coords_vals.map((d, i) => d + subord_vals[i]);
+
+      var color_vals=[]
+      //normalize
+      for(let i=0;i<colors_temp.length;i++){
+        if (colors_temp[i]==0){
+          color_vals.push(0)
+        }else if(colors_temp[i]>0){
+          color_vals.push(1)
+        }else if(colors_temp[i]<0){
+          color_vals.push(-1)
+        }
+      }
+
       console.log("VALS", coords_vals, subord_vals, color_vals);
       var tokens_with_color = this.tokens_.map((d, i) => [
         d[0],
@@ -154,11 +169,13 @@ export default {
 
             //categoryorder]
           ],
+          counts:verses.map(d=>d.length),
           line: {
-            color: temp_data[3],
-            colorscale: colorscale(),
+            color: temp_data.map(d=>d[3]),
+            //colorscale: colorscale(),
             colorbar: {
               orientation: "v",
+              shape:'hspline'
             },
           },
         };
@@ -191,10 +208,21 @@ export default {
       ></b-select
     ></b-row>
     <b-row><b-button @click="this.draw_distplot">Redraw</b-button></b-row>
+    <div id="parallel_container">
     <b-row
       :id="'distplot_style_single' + String(i)"
       v-for="(book, i) in this.books"
       :key="String(i) + book"
     ></b-row>
+    </div>
   </b-container>
 </template>
+
+<style>
+#parallel_container{
+  width: 100%;
+  height: 1000px;
+  overflow: hidden;
+  overflow-y: scroll
+}
+</style>
