@@ -1,4 +1,4 @@
-# IPYNB Notebooks
+# IPYNB Notebooks (pipeline to convert .pdf to .csv)
 
 In order for these scripts to work,<b>the directory must contain the following folders</b>:
 - <b>bibles</b>: where all the pdf are stored (used by "scraping bibles.ipynb");
