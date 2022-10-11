@@ -566,14 +566,8 @@ export default {
             ></b-form-radio-group>
           </b-form-group>
 </b-row>
-
-    <b-row>
-      <b-col cols='9'>
-       
-    <div id="scatter_3D_single"></div>
-  </b-col>
-  <b-col cols="3">
-    <b-form-group v-slot="{ ariaDescribedby }">
+<b-row>
+  <b-form-group v-slot="{ ariaDescribedby }">
             <b-form-radio-group
               v-model="filt_type"
               :options="filt_options"
@@ -581,6 +575,15 @@ export default {
               name="radio-inline"
             ></b-form-radio-group>
           </b-form-group>
+</b-row>
+
+    <b-row>
+      <b-col cols="11">
+       
+    <div id="scatter_3D_single"></div>
+  </b-col>
+
+      <b-col cols="1">
     <div id="top_trigrams">      
       <b-list-group>
       <b-list-group-item v-for="(trigram,i) in displayable_trigrams.slice(0,200)" :key="String(i)+trigram" :id="'trigram_il'+i" :class="'il_'+colors[i]">
@@ -603,9 +606,11 @@ export default {
   background-color:rgba(0, 0, 255, 0.264);
 }
 #top_trigrams{
-  margin-top:3rem;
   height:900px;
+  width:15rem;
   overflow: hidden;
   overflow-y: scroll;
+  margin-left: auto;
+  margin-right: auto
 }
 </style>

@@ -82,7 +82,7 @@ export default {
             title:'<b>Total: '+String(this.data_.length)+'</b>',
             barmode:'stack',
             annotations:[],
-            width:window.innerWidth/1.2,
+            //width:window.innerWidth/1.2,
             height:300,
             xaxis:{
                 visible:false
@@ -105,8 +105,12 @@ export default {
 </script>
 
 <template>
-
-                <div id="hbar_perc"></div>
+<b-container>
+  <b-row>
+    <b-col><div id="hbar_perc"></div></b-col>
+  </b-row>
+</b-container>
+                
 
 </template>
 
