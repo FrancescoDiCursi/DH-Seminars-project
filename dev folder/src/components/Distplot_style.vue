@@ -69,6 +69,7 @@ export default {
       ],
       books: [],
       target_books: [],
+      tokens_with_colors:[]
     };
   },
   mounted() {
@@ -165,9 +166,9 @@ export default {
           dimensions: [
             { labels: "Book", values: temp_data.map((d) => d[0]) },
             { labels: "Chapter", values: temp_data.map((d) => d[1]) },
-            { labels: "Verse", values: temp_data.map((d) => d[2][0]) },
+            /*{ labels: "Verse", values: temp_data.map((d) => d[2][0]) },*/
 
-            //categoryorder]
+   
           ],
           counts:verses.map(d=>d.length),
           line: {
@@ -185,13 +186,25 @@ export default {
         };
 
         Plotly.newPlot("distplot_style_single" + String(i), [trace1], layout);
+
+        //treemap
+        this.tokens_with_color=tokens_with_color
+
       }
     },
+    draw_treemap(){
+      console.log(this.tokens_with_colors)
+      
+      
+    }
   },
   watch: {
     target_books: function () {
       //setTimeout(this.draw_distplot, 1000); //better if with button, otherwise potential lagging on slow multiselect
     },
+    tokens_with_colors: function(){
+      this.draw_treemap()
+    }
   },
 };
 </script>
@@ -209,11 +222,21 @@ export default {
     ></b-row>
     <b-row><b-button @click="this.draw_distplot">Redraw</b-button></b-row>
     <div id="parallel_container">
-    <b-row
+    <b-col>
+      <b-row
       :id="'distplot_style_single' + String(i)"
       v-for="(book, i) in this.books"
-      :key="String(i) + book"
+      :key="String(i) + book + 'parallel'"
     ></b-row>
+  </b-col>
+  <b-col>
+      <b-row
+      :id="'treemap_style_single' + String(i)"
+      v-for="(book, i) in this.books"
+      :key="String(i) + book + 'treemap'"
+    ></b-row>
+  </b-col>
+  
     </div>
   </b-container>
 </template>

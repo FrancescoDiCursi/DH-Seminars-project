@@ -70,15 +70,23 @@ export default {
       ],
       trigrams_: [],
       verses_idx:[],
+      trigrams_freq_temp:[],
+      colors_temp:[],
+      displayable_trigrams_temp:[],
+
       trigrams_freq:[],
       colors:[],
       displayable_trigrams:[],
       filt_type:'All',
-      filt_options:['All','Coord','Subord']
-
+      filt_options:['All','Coord','Subord'],
+      annot_status:'Show annots',
+      annot_options:['Show annots','Hide annots'],
+      scale_option:'Absolute values',
+      scale_options:['Absolute values','Scaled values']
     };
   },
   mounted() {
+    //this.scale_option=this.scale_options[0]
     var trigrams_temp = this.verses_.map((d) => [
       ...d[2]
         .split(" ")
@@ -232,6 +240,7 @@ export default {
           return d
         }
       })
+      console.log(max_subord_trigram)
       max_subord_trigram=max_subord_trigram[0]
 
       var max_neutral_trigram=trigrams_for_arrows.filter(function(d){
@@ -255,14 +264,121 @@ export default {
 
       console.log("COLORS", colors_,);
 
+      //annot rows
+      var annot_temp=[
+            //axis
+            {
+              'x':0,
+              'y':0,
+              'z':0,
+              ax:100,
+              arrowcolor:'black',
+              arrowhead:4,
+              showarrow:true,
+              text:'0 point'
+
+            },
+            //coord
+            {
+              'x':max_coord_trigram[0],
+              'y':max_coord_trigram[1],
+              'z':max_coord_trigram[2],
+              arrowcolor:'red',
+              font:{
+                color:'red',
+                size:12,
+              },
+              text:`<b>${max_coord_trigram.slice(0,3).join(' ')} (${max_coord_trigram[4]})</b>`,
+              bgcolor:'rgba(255,0,0,0.3)',
+              bordercolor:'black'
+            },//subord
+            {
+              'x':max_subord_trigram[0],
+              'y':max_subord_trigram[1],
+              'z':max_subord_trigram[2],
+              arrowcolor:'blue',
+              font:{
+                color:'blue',
+                size:12,
+              },
+              text:`<b>${max_subord_trigram.slice(0,3).join(' ')} (${max_subord_trigram[4]})</b>`,
+              bgcolor:'rgba(0,0,255,0.3)',
+              bordercolor:'black'
+
+            },//neutral
+            {
+              'x':max_neutral_trigram[0],
+              'y':max_neutral_trigram[1],
+              'z':max_neutral_trigram[2],
+              arrowcolor:'grey',
+              font:{
+                color:'grey',
+                size:12,
+              },
+              text:`<b>${max_neutral_trigram.slice(0,3).join(' ')} (${max_neutral_trigram[4]})</b>`,
+              bgcolor:'rgba(210, 210, 210,0.6)',
+              bordercolor:'black'
+            }
+          ]
+      var annot_=[]
+      //set of points
+      var temp_data_unfilt=[... new Set(x_.map((d,i)=>[x_[i],y_[i],z_[i],colors_[i],sizes_[i],text_[i]].join('§')))].map(d=>d.split('§'))
+      console.log(temp_data_unfilt)
+      var temp_data=[]
+      if(this.filt_type=='Coord'){
+        temp_data=temp_data_unfilt.filter(function(d){
+          if(d[3]=='1'){
+            return d
+          }
+        })
+        if (max_coord_trigram!=[]){
+          annot_=[annot_temp[0],annot_temp[1]]
+          annot_[0]['x']=temp_data[0][0]
+          annot_[0]['y']=temp_data[0][1]
+          annot_[0]['z']=temp_data[0][2]
+
+        }
+      } else  if(this.filt_type=='Subord'){
+        temp_data=temp_data_unfilt.filter(function(d){
+          if(d[3]=='-1'){
+            return d
+          }
+        })
+        if (max_subord_trigram!=[]){
+          annot_=[annot_temp[0],annot_temp[2]]
+          annot_[0]['x']=temp_data[0][0]
+          annot_[0]['y']=temp_data[0][1]
+          annot_[0]['z']=temp_data[0][2]
+
+        }
+      } else if(this.filt_type=='All'){
+        temp_data=temp_data_unfilt
+        annot_=annot_temp
+        annot_[0]['x']=temp_data[0][0]
+          annot_[0]['y']=temp_data[0][1]
+          annot_[0]['z']=temp_data[0][2]
+      }
+
+      if(this.annot_status!='Show annots'){
+        annot_=[]
+      }
+  
+      console.log(x_, temp_data,annot_)
+
+
+
+
+
+
+
       var trace1 = {
-        y: y_,
-        z: z_,
-        x: x_,
+        x:temp_data.map(d=>d[0]),
+        y:temp_data.map(d=>d[1]),
+        z:temp_data.map(d=>d[2]),
 
         mode: "markers",
         type: "scatter3d",
-        text: text_,
+        text: temp_data.map(d=>d[5]),
         surfacecolor:'black',
         marker: {
        
@@ -273,8 +389,8 @@ export default {
           cmin:-1,
           cmid:0,
           cmax:1,
-             color: colors_.map((d) => d),
-          size: sizes_.map((d) => d),
+             color: temp_data.map((d) => +d[3]),
+          size: temp_data.map((d) => this.scale_option=='Scaled values' ?Math.sqrt(+d[4])*5 :+d[4]),
         },
       };
       var trace2 = {
@@ -327,57 +443,7 @@ export default {
             type: "categorical",
             automargin:true
           },
-          annotations:[
-            //axis
-            {
-              arrowcolor:'black',
-              arrowhead:4,
-              showarrow:true,
-              text:'0 point'
-
-            },
-            //coord
-            {
-              x:max_coord_trigram[0],
-              y:max_coord_trigram[1],
-              z:max_coord_trigram[2],
-              arrowcolor:'red',
-              font:{
-                color:'red',
-                size:12,
-              },
-              text:`<b>${max_coord_trigram.slice(0,3).join(' ')} (${max_coord_trigram[4]})</b>`,
-              bgcolor:'rgba(255,0,0,0.3)',
-              bordercolor:'black'
-            },//subord
-            {
-              x:max_subord_trigram[0],
-              y:max_subord_trigram[1],
-              z:max_subord_trigram[2],
-              arrowcolor:'blue',
-              font:{
-                color:'blue',
-                size:12,
-              },
-              text:`<b>${max_subord_trigram.slice(0,3).join(' ')} (${max_subord_trigram[4]})</b>`,
-              bgcolor:'rgba(0,0,255,0.3)',
-              bordercolor:'black'
-
-            },//neutral
-            {
-              x:max_neutral_trigram[0],
-              y:max_neutral_trigram[1],
-              z:max_neutral_trigram[2],
-              arrowcolor:'grey',
-              font:{
-                color:'grey',
-                size:12,
-              },
-              text:`<b>${max_neutral_trigram.slice(0,3).join(' ')} (${max_neutral_trigram[4]})</b>`,
-              bgcolor:'rgba(210, 210, 210,0.6)',
-              bordercolor:'black'
-            }
-          ]
+          annotations:annot_
         },
       };
       console.log(x_.indexOf('cannot'),x_.indexOf('on'), x_[x_.length/2])
@@ -396,18 +462,64 @@ export default {
         il_classes.push(res)
       }
 
-      this.colors=il_classes
-      this.trigrams_freq=sizes_
+      this.colors_temp=il_classes
+      this.trigrams_freq_temp=sizes_
       this.trigrams_.map((d,i)=>d.map(r=>temp_verses_idx.push(i+1)))
       this.trigrams_.map(d=>d.map(r=>temp_disp_trigrams.push(r)))
       this.verses_idx=temp_verses_idx
-      this.displayable_trigrams=temp_disp_trigrams
-      console.log(this.verses_idx, this.displayable_trigrams)
+      this.displayable_trigrams_temp=temp_disp_trigrams
+      console.log( this.displayable_trigrams_temp)
 
       Plotly.newPlot("scatter_3D_single", [trace1], layout); //trace 2, mesh, makes it crash
+
+      this.order_and_filter_list()
     },
     order_and_filter_list(){
-     var temp_l=this.displayable_trigrams.map((d,i)=>[d,this.colors[i],this.trigrams_freq[i]])
+     var temp_l_init= this.displayable_trigrams_temp.map((d,i)=>[d,this.colors_temp[i],this.trigrams_freq_temp[i]])
+     var temp_l_init_str=temp_l_init.map(d=>d.join(' '))
+     var temp_l=[... new Set(temp_l_init_str)].map(d=>d.split(' ')).map(d=>[d[0].split(','),d[1],d[2]])
+
+     console.log(temp_l)
+
+     var temp_l_coord=temp_l.filter(function(f){
+      if(f[1]=='coord'){
+        return f
+      }
+     })
+     temp_l_coord=[... temp_l_coord].sort((a,b)=>a[2]-b[2])
+
+     var temp_l_subord=temp_l.filter(function(f){
+      if(f[1]=='subord'){
+        return f
+      }
+     })
+     temp_l_subord=[... temp_l_subord].sort((a,b)=>a[2]-b[2])
+
+     temp_l=[... temp_l].sort((a,b)=>a[2]-b[2])
+     console.log(temp_l)
+
+     if(this.filt_type=='Coord'){
+      temp_l_coord=temp_l_coord.reverse()
+      this.displayable_trigrams=temp_l_coord.map(d=>d[0])
+      this.colors=temp_l_coord.map(d=>d[1])
+      this.trigrams_freq=temp_l_coord.map(d=>d[2])
+      
+     }else if(this.filt_type=='Subord'){
+      temp_l_subord=temp_l_subord.reverse()
+      this.displayable_trigrams=temp_l_subord.map(d=>d[0])
+      this.colors=temp_l_subord.map(d=>d[1])
+      this.trigrams_freq=temp_l_subord.map(d=>d[2])
+      
+     }else if (this.filt_type='All'){
+      temp_l=temp_l.reverse()
+      this.displayable_trigrams=temp_l.map(d=>d[0])
+      this.colors=temp_l.map(d=>d[1])
+      this.trigrams_freq=temp_l.map(d=>d[2])
+
+     }
+
+     console.log(this.displayable_trigrams, this.colors, this.trigrams_freq)
+     
     }
   },
 
@@ -417,8 +529,16 @@ export default {
     },
     filt_type: function(){
       //filter and order list
+      this.draw_scatter()
+
       this.order_and_filter_list()
 
+    },
+    annot_status: function(){
+      this.draw_scatter()
+    },
+    scale_option: function(){
+      this.draw_scatter()
     }
   },
 };
@@ -427,12 +547,33 @@ export default {
 <template>
   <b-container>
     <b-row>
+      <b-form-group v-slot="{ ariaDescribedby }">
+            <b-form-radio-group
+              v-model="scale_option"
+              :options="scale_options"
+              :aria-describedby="ariaDescribedby"
+              name="radio-inline-scale"
+            ></b-form-radio-group>
+          </b-form-group>
+</b-row>
+<b-row>
+  <b-form-group v-slot="{ ariaDescribedby }">
+            <b-form-radio-group
+              v-model="annot_status"
+              :options="annot_options"
+              :aria-describedby="ariaDescribedby"
+              name="radio-inline-anntos"
+            ></b-form-radio-group>
+          </b-form-group>
+</b-row>
+
+    <b-row>
       <b-col cols='9'>
+       
     <div id="scatter_3D_single"></div>
   </b-col>
   <b-col cols="3">
-    <div id="top_trigrams">
-      <b-form-group v-slot="{ ariaDescribedby }">
+    <b-form-group v-slot="{ ariaDescribedby }">
             <b-form-radio-group
               v-model="filt_type"
               :options="filt_options"
@@ -440,17 +581,16 @@ export default {
               name="radio-inline"
             ></b-form-radio-group>
           </b-form-group>
+    <div id="top_trigrams">      
       <b-list-group>
-      <b-list-group-item v-for="(trigram,i) in displayable_trigrams.slice(0,100)" :key="String(i)+trigram" :id="'trigram_il'+i" :class="'il_'+colors[i]">
+      <b-list-group-item v-for="(trigram,i) in displayable_trigrams.slice(0,200)" :key="String(i)+trigram" :id="'trigram_il'+i" :class="'il_'+colors[i]">
         {{trigram.join(' ') + ' '+trigrams_freq[i] }}
       </b-list-group-item>
     </b-list-group>
   </div>
     </b-col>
   </b-row>
-  <b-row>
 
-  </b-row>
   
   </b-container>
 </template>

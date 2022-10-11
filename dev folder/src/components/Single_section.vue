@@ -6,10 +6,11 @@ import * as unique from "array-unique-deep";
 import Scatterplot_freq from "./Scatterplot_freq.vue";
 import Distplot_style from "./Distplot_style.vue";
 import Scatter_3D from "./Scatter_3D.vue";
+import Rect_D3 from "./Rect_D3.vue";
 
 export default {
   name: "Single_section",
-  components: { Scatterplot_freq, Distplot_style, Scatter_3D },
+  components: { Scatterplot_freq, Distplot_style, Scatter_3D, Rect_D3 },
   data() {
     return {
       temp_file_list: [],
@@ -32,6 +33,7 @@ export default {
       freq_plot_key: 0,
       dist_plot_key: 0,
       scatter_3d_key:0,
+      rect_key:0,
       folders: [
         "Easy-to-Read Version__American",
         "Unlocked Literal Bible__",
@@ -247,10 +249,72 @@ export default {
           "66-Revelation",
         ],
       ],
-
+      coord_conj: ["for", "and", "but", "nor", "or", "yet", "so"],
+      subord_conj: [
+        "as though",
+        "supposing",
+        "whereas",
+        "till",
+        "which",
+        "in order that",
+        "even if",
+        "as long as",
+        "now that",
+        "since",
+        "before",
+        "where if",
+        "so that",
+        "because",
+        "as soon as",
+        "til",
+        "while",
+        "in order",
+        "inasmuch",
+        "after",
+        "whoever",
+        "once",
+        "as",
+        "now",
+        "besides",
+        "as if",
+        "if",
+        "that",
+        "if only",
+        "still",
+        "whenever",
+        "if then",
+        "wherever",
+        "though",
+        "whether",
+        "rather than",
+        "unless",
+        "although",
+        "now since",
+        "in case",
+        "until",
+        "as much as",
+        "why",
+        "where",
+        "within",
+        "if when",
+        "even though",
+        "provided",
+        "when",
+        "than",
+        "who",
+        "just as",
+        "provided that",
+        "without",
+        "even",
+        "lest",
+        "now when",
+      ],
       chaps: [],
 
+
       loaded_file: [],
+
+      
     };
   },
   mounted() {
@@ -298,6 +362,7 @@ export default {
       this.freq_ = freq_counter;
       this.freq_status = true;
       this.freq_plot_key += 1;
+      this.rect_key +=1
       this.dist_plot_key += 1;
       this.scatter_3d_key +=1
       console.log(this.freq_plot_key);
@@ -351,11 +416,57 @@ export default {
 
       //there are dupliacate verse, take half the length
       temp_file = temp_file.slice(0, temp_file.length / 2);
-      this.displayable_verses = temp_file.map((d) => [
+      /*this.displayable_verses*/var temp_displayable_verses = temp_file.map((d) => [
         d["Book"],
         d["Chapter"],
         d["Verse"],
       ]);
+//color
+      var coords_vals = [];
+      var subord_vals = [];
+
+      var verses_tokens=temp_file.map(d=>d['Verse'].split(' '))
+      console.log(verses_tokens)
+
+      for (let i = 0; i < temp_file.length; i++) {
+        var counter_coords = 0;
+        for (let j = 0; j < verses_tokens[i].length; j++) {
+          //console.log(verses_tokens[i],verses_tokens[i][j])
+          if (this.coord_conj.includes(verses_tokens[i][j].toLowerCase())) {
+            counter_coords += 1;
+          }
+        }
+        var counter_subords = 0;
+        for (let j = 0; j <verses_tokens[i].length; j++) {
+          if (this.subord_conj.includes(verses_tokens[i][j].toLowerCase())) {
+            counter_subords += 1;
+          }
+        }
+
+        coords_vals.push(counter_coords);
+        if (counter_subords == 0) {
+          subord_vals.push(counter_subords);
+        } else {
+          subord_vals.push(-Math.abs(counter_subords));
+        }
+        //NEGATIVE
+      }
+
+      var colors_temp = coords_vals.map((d, i) => d + subord_vals[i]);
+
+      var color_vals=[]
+      //normalize
+      for(let i=0;i<colors_temp.length;i++){
+        if (colors_temp[i]==0){
+          color_vals.push('neutral')
+        }else if(colors_temp[i]>0){
+          color_vals.push('coord')
+        }else if(colors_temp[i]<0){
+          color_vals.push('subord')
+        }
+      }
+      this.displayable_verses=temp_displayable_verses.map((d,i)=>[d[0],d[1],d[2],color_vals[i]])
+      console.log("VALS", coords_vals, subord_vals, color_vals, temp_displayable_verses);
     },
   },
   watch: {
@@ -453,6 +564,7 @@ export default {
     SINGLE
     <b-container>
       <b-row>
+        <b-col cols="7">
         <b-form inline>
           <b-form-group>
             <b-form-select
@@ -478,12 +590,18 @@ export default {
             ></b-form-select>
           </b-form-group>
         </b-form>
+      </b-col>
+    
       </b-row>
+      <b-row>
+        <Rect_D3 v-if="freq_status" :key="String(this.rect_key)+'rect'" :data_="displayable_verses"></Rect_D3>
+      </b-row>
+
       <b-row>
         <div id="verses">
           <b-list-group>
             <b-list-group-item
-              class="list_item"
+              :class="'il_'+displayable_verses[i][3]"
               v-for="(verse, i) in this.displayable_verses"
               :key="i + verse[2]"
             >
@@ -555,5 +673,27 @@ export default {
   height: 30rem;
   overflow: hidden;
   overflow-y: scroll;
+}
+
+.il_coord{
+  background-color: rgba(255, 0, 0, 0.301);
+}
+.il_subord{
+  background-color:rgba(0, 0, 255, 0.264);
+}
+#coord_{
+  background-color: rgba(255, 0, 0, 0.15);
+  border:1px rgba(0, 0, 0, 0.392) solid
+  
+
+}
+#subord_{
+  background-color:rgba(0, 0, 255, 0.15);
+  border:1px rgba(0, 0, 0, 0.392) solid
+
+}
+#neutral_,#tot_{
+  border:1px rgba(0, 0, 0, 0.392) solid
+
 }
 </style>
