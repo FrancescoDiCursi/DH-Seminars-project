@@ -82,7 +82,7 @@ export default {
             title:'<b>Total: '+String(this.data_.length)+'</b>',
             barmode:'stack',
             annotations:[],
-            width:1000,
+            width:window.innerWidth/1.2,
             height:300,
             xaxis:{
                 visible:false

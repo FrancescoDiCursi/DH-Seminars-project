@@ -553,7 +553,7 @@ export default {
     
     <template>
   <div id="single_section">
-    <div>
+    <div class="d-flex justify-content-center mb-3">
       <b-spinner
         v-if="loading_status"
         id="single_section_spinner"
@@ -561,7 +561,6 @@ export default {
       ></b-spinner>
       <span v-else></span>
     </div>
-    SINGLE
     <b-container>
       <b-row>
         <b-col cols="7">
