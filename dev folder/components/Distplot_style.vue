@@ -1,7 +1,7 @@
 <script>
 import * as plotly from "https://cdn.plot.ly/plotly-2.11.1.min.js";
 import * as d3 from "https://cdn.skypack.dev/d3@7";
-
+import { v4 as uuidv4 } from 'uuid'
 export default {
   name: "Distplot_style",
   props: { tokens_: Array },
@@ -68,6 +68,7 @@ export default {
         "now when",
       ],
       books: [],
+      chapters:[],
       target_books: [],
       tokens_with_colors:[]
     };
@@ -75,7 +76,8 @@ export default {
   mounted() {
     console.log(this.tokens_);
     this.books = [...new Set(this.tokens_.map((d) => d[0]))];
-    this.target_books = [this.books[0]];
+    this.chapters= [...new Set(this.tokens_.map((d) => d[1]))];
+    this.target_books = this.chapters;
     setTimeout(this.draw_distplot, 1000);
   },
   methods: {
@@ -153,7 +155,7 @@ export default {
       for (let i = 0; i < this.target_books.length; i++) {
         var temp_target_book = this.target_books[i];
         var temp_data = tokens_with_color.filter(function (d) {
-          if (d[0] == temp_target_book) {
+          if (d[1] == temp_target_book) {
             return d;
           }
         });
@@ -164,9 +166,9 @@ export default {
           name: color_vals.map((d) => String(d)),
 
           dimensions: [
-            { labels: "Book", values: temp_data.map((d) => d[0]) },
+           /* { labels: "Book", values: temp_data.map((d) => d[0]) }*/,
             { labels: "Chapter", values: temp_data.map((d) => d[1]) },
-            /*{ labels: "Verse", values: temp_data.map((d) => d[2][0]) },*/
+            { labels: "Verse", values: temp_data.map((d) => d[2][0]) }
 
    
           ],
@@ -184,7 +186,6 @@ export default {
         var layout = {
           height: 1000,
         };
-
         Plotly.newPlot("distplot_style_single" + String(i), [trace1], layout);
 
         //treemap
@@ -207,32 +208,40 @@ export default {
     }
   },
 };
-</script>
 
-<template>
-  <b-container>
+
+/*
     <b-row
       ><b-select
         v-model="target_books"
-        :options="books"
+        :options="chapters"
         id="book_selector_parallel"
         multiple
         :select-size="3"
       ></b-select
     ></b-row>
     <b-row><b-button @click="this.draw_distplot">Redraw</b-button></b-row>
+*/
+</script>
+
+<template>
+  <b-container>
+
+    
     <div id="parallel_container">
     <b-col>
-      <b-row
+      <b-row id="distplot_container">
+      <div
       :id="'distplot_style_single' + String(i)"
-      v-for="(book, i) in this.books"
-      :key="String(i) + book + 'parallel'"
-    ></b-row>
+      class="distplot_style_single"
+      v-for="(book, i) in this.chapters"
+      :key="String(i) + book + 'parallel'"></div>
+    </b-row>
   </b-col>
   <b-col>
       <b-row
       :id="'treemap_style_single' + String(i)"
-      v-for="(book, i) in this.books"
+      v-for="(book, i) in this.chapters"
       :key="String(i) + book + 'treemap'"
     ></b-row>
   </b-col>
@@ -248,4 +257,9 @@ export default {
   overflow: hidden;
   overflow-y: scroll
 }
+.distplot_style_single{
+ 
+  
+}
+
 </style>

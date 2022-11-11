@@ -7,10 +7,11 @@ import Scatterplot_freq from "./Scatterplot_freq.vue";
 import Distplot_style from "./Distplot_style.vue";
 import Scatter_3D from "./Scatter_3D.vue";
 import Rect_D3 from "./Rect_D3.vue";
+import Single_heatmap from "./Single_heatmap.vue";
 
 export default {
   name: "Single_section",
-  components: { Scatterplot_freq, Distplot_style, Scatter_3D, Rect_D3 },
+  components: { Scatterplot_freq, Distplot_style, Scatter_3D, Rect_D3 ,Single_heatmap},
   data() {
     return {
       temp_file_list: [],
@@ -29,20 +30,22 @@ export default {
       loading_status: true,
       freq_: {}, //count token's frequency
       grouped_tokens: [], //same as displayable_tokens but with [2]=tokens //count grouped by book and chapter
+      filtered_data:[] ,//for network
       freq_status: false,
       freq_plot_key: 0,
       dist_plot_key: 0,
-      scatter_3d_key:0,
-      rect_key:0,
+      scatter_3d_key: 0,
+      rect_key: 0,
+      heat_key:0,
       folders: [
-        "Easy-to-Read Version__American",
-        "Unlocked Literal Bible__",
-        "Young's Literal Translation__archaic British",
+        "Orthodox Jewish Version",
+        "Young's Literal Translation",
+        "New World Translation",
       ],
       //target_files: "",
       files: [
+        //Orthodox Jewish Bible
         [
-          /*Easy to read */ "All",
           "1-Genesis",
           "2-Exodus",
           "3-Leviticus",
@@ -61,10 +64,10 @@ export default {
           "16-Nehemiah",
           "17-Esther",
           "18-Job",
-          "19-Psalm",
+          "19-Psalms",
           "20-Proverbs",
           "21-Ecclesiastes",
-          "22-Song of Songs",
+          "22-Song Of Songs",
           "23-Isaiah",
           "24-Jeremiah",
           "25-Lamentations",
@@ -77,7 +80,7 @@ export default {
           "32-Jonah",
           "33-Micah",
           "34-Nahum",
-          "35-Habakkuk",
+          "35-Habukkuk",
           "36-Zephaniah",
           "37-Haggai",
           "38-Zechariah",
@@ -110,8 +113,8 @@ export default {
           "65-Jude",
           "66-Revelation",
         ],
+        //Young'S Literal Translation
         [
-          /*Unlocked Literal*/ "All",
           "1-Genesis",
           "2-Exodus",
           "3-Leviticus",
@@ -133,7 +136,7 @@ export default {
           "19-Psalms",
           "20-Proverbs",
           "21-Ecclesiastes",
-          "22-Song of Songs",
+          "22-Song Of Songs",
           "23-Isaiah",
           "24-Jeremiah",
           "25-Lamentations",
@@ -146,7 +149,7 @@ export default {
           "32-Jonah",
           "33-Micah",
           "34-Nahum",
-          "35-Habakkuk",
+          "35-Habukkuk",
           "36-Zephaniah",
           "37-Haggai",
           "38-Zechariah",
@@ -179,8 +182,8 @@ export default {
           "65-Jude",
           "66-Revelation",
         ],
+        //New World Translation
         [
-          /* Young's Literal Translation__archaic British*/ "All",
           "1-Genesis",
           "2-Exodus",
           "3-Leviticus",
@@ -202,7 +205,7 @@ export default {
           "19-Psalms",
           "20-Proverbs",
           "21-Ecclesiastes",
-          "22-Song of Solomon",
+          "22-Song of Songs",
           "23-Isaiah",
           "24-Jeremiah",
           "25-Lamentations",
@@ -311,10 +314,7 @@ export default {
       ],
       chaps: [],
 
-
       loaded_file: [],
-
-      
     };
   },
   mounted() {
@@ -325,6 +325,8 @@ export default {
         this.loaded_file.push(csvs[0]);
         this.loaded_file.push(csvs[1]);
         this.loaded_file.push(csvs[2]);
+        this.loaded_file.push(csvs[3]);
+        //this.loaded_file.push(csvs[4]);
       }
     );
   },
@@ -357,14 +359,15 @@ export default {
         d[1],
         d[2].split(/\W+/),
       ]);
-      this.grouped_tokens=temp_grouped_verses
-     
+      this.grouped_tokens = temp_grouped_verses;
+
       this.freq_ = freq_counter;
       this.freq_status = true;
       this.freq_plot_key += 1;
-      this.rect_key +=1
+      this.rect_key += 1;
       this.dist_plot_key += 1;
-      this.scatter_3d_key +=1
+      this.scatter_3d_key += 1;
+      this.heat_key+=1
       console.log(this.freq_plot_key);
       console.log(freq_counter);
       console.log(Object.keys(freq_counter), Object.values(freq_counter));
@@ -394,7 +397,7 @@ export default {
       //filt by chap
       temp_file = temp_file.filter(function (d) {
         if (temp_chap == "All") {
-          return d3;
+          return d;
         } else if (temp_chap != "All") {
           if (d["Chapter"] == temp_chap) {
             return d;
@@ -409,24 +412,26 @@ export default {
           return d;
         } else if (temp_verse != "All") {
           if (d["Verse"].split(" ")[0] == String(temp_verse)) {
+            console.log(d["Verse"], d["Verse"].split(" ")[0]);
             return d;
           }
         }
       });
 
-      //there are dupliacate verse, take half the length
-      temp_file = temp_file.slice(0, temp_file.length / 2);
-      /*this.displayable_verses*/var temp_displayable_verses = temp_file.map((d) => [
-        d["Book"],
-        d["Chapter"],
-        d["Verse"],
-      ]);
-//color
+      console.log(temp_file);
+
+      this.filtered_data=temp_file
+      /*this.displayable_verses*/ var temp_displayable_verses = temp_file.map(
+        (d) => [d["Book"], d["Chapter"], d["Verse"]]
+      );
+
+      console.log(temp_file);
+      //color
       var coords_vals = [];
       var subord_vals = [];
 
-      var verses_tokens=temp_file.map(d=>d['Verse'].split(' '))
-      console.log(verses_tokens)
+      var verses_tokens = temp_file.map((d) => d["Verse"].split(" "));
+      console.log(verses_tokens);
 
       for (let i = 0; i < temp_file.length; i++) {
         var counter_coords = 0;
@@ -437,7 +442,7 @@ export default {
           }
         }
         var counter_subords = 0;
-        for (let j = 0; j <verses_tokens[i].length; j++) {
+        for (let j = 0; j < verses_tokens[i].length; j++) {
           if (this.subord_conj.includes(verses_tokens[i][j].toLowerCase())) {
             counter_subords += 1;
           }
@@ -454,19 +459,30 @@ export default {
 
       var colors_temp = coords_vals.map((d, i) => d + subord_vals[i]);
 
-      var color_vals=[]
+      var color_vals = [];
       //normalize
-      for(let i=0;i<colors_temp.length;i++){
-        if (colors_temp[i]==0){
-          color_vals.push('neutral')
-        }else if(colors_temp[i]>0){
-          color_vals.push('coord')
-        }else if(colors_temp[i]<0){
-          color_vals.push('subord')
+      for (let i = 0; i < colors_temp.length; i++) {
+        if (colors_temp[i] == 0) {
+          color_vals.push("neutral");
+        } else if (colors_temp[i] > 0) {
+          color_vals.push("coord");
+        } else if (colors_temp[i] < 0) {
+          color_vals.push("subord");
         }
       }
-      this.displayable_verses=temp_displayable_verses.map((d,i)=>[d[0],d[1],d[2],color_vals[i]])
-      console.log("VALS", coords_vals, subord_vals, color_vals, temp_displayable_verses);
+      this.displayable_verses = temp_displayable_verses.map((d, i) => [
+        d[0],
+        d[1],
+        d[2],
+        color_vals[i],
+      ]);
+      console.log(
+        "VALS",
+        coords_vals,
+        subord_vals,
+        color_vals,
+        temp_displayable_verses
+      );
     },
   },
   watch: {
@@ -487,6 +503,8 @@ export default {
       ];
       this.target_file = "";
       this.target_file = this.target_files[1];
+      this.target_chap = "All";
+      this.target_verse = "All";
       if (this.start_flag == true) {
         this.handle_verses();
         this.tokenize();
@@ -540,6 +558,7 @@ export default {
     target_verse: function () {
       //comment out "this.handle_verses" if don't want to load all verses at start
       this.handle_verses();
+      console.log(this.verses_);
       this.start_flag = true;
       this.tokenize();
       this.loading_status = false;
@@ -564,43 +583,39 @@ export default {
     <b-container>
       <b-row>
         <b-col cols="7">
-        <b-form inline>
-          <b-form-group>
-            <b-form-select
-              @click="this.loading_status = true"
-              v-model="target_folder"
-              :options="folders"
-              id="folder_selector"
-            ></b-form-select>
-            <b-form-select
-              v-model="target_file"
-              :options="target_files"
-              id="book_selector"
-            ></b-form-select>
-            <b-form-select
-              v-model="target_chap"
-              :options="target_chaps"
-              id="chap_selector"
-            ></b-form-select>
-            <b-form-select
-              v-model="target_verse"
-              :options="target_verses"
-              id="verse_selector"
-            ></b-form-select>
-          </b-form-group>
-        </b-form>
-      </b-col>
-    
-      </b-row>
-      <b-row>
-        <Rect_D3 v-if="freq_status" :key="String(this.rect_key)+'rect'" :data_="displayable_verses"></Rect_D3>
+          <b-form inline>
+            <b-form-group>
+              <b-form-select
+                @click="this.loading_status = true"
+                v-model="target_folder"
+                :options="folders"
+                id="folder_selector"
+              ></b-form-select>
+              <b-form-select
+                v-model="target_file"
+                :options="target_files"
+                id="book_selector"
+              ></b-form-select>
+              <b-form-select
+                v-model="target_chap"
+                :options="target_chaps"
+                id="chap_selector"
+              ></b-form-select>
+              <b-form-select
+                v-model="target_verse"
+                :options="target_verses"
+                id="verse_selector"
+              ></b-form-select>
+            </b-form-group>
+          </b-form>
+        </b-col>
       </b-row>
 
       <b-row>
         <div id="verses">
           <b-list-group>
             <b-list-group-item
-              :class="'il_'+displayable_verses[i][3]"
+              :class="'il_' + displayable_verses[i][3]"
               v-for="(verse, i) in this.displayable_verses"
               :key="i + verse[2]"
             >
@@ -616,22 +631,43 @@ export default {
       </b-row>
 
       <b-row>
-        <Scatterplot_freq
+        <Rect_D3
           v-if="freq_status"
-          :key="String(this.freq_plot_key) + 'freq'"
-          :freq_="this.freq_"
-        ></Scatterplot_freq>
-        </b-row>
-        <b-row>
+          :key="String(this.rect_key) + 'rect'"
+          :data_="displayable_verses"
+        ></Rect_D3>
+      </b-row>
+      <b-row>
         <Distplot_style
           v-if="freq_status"
           :key="String(this.dist_plot_key) + 'dist'"
           :tokens_="this.grouped_tokens"
         ></Distplot_style>
       </b-row>
+
+      
+
       <b-row>
-        <Scatter_3D v-if="freq_status"
-        :key="String(this.scatter_3d_key)+ 'scatter_3d'" :verses_="this.displayable_verses"></Scatter_3D>
+        <Scatterplot_freq
+          v-if="freq_status"
+          :key="String(this.freq_plot_key) + 'freq'"
+          :freq_="this.freq_"
+        ></Scatterplot_freq>
+      </b-row>
+      
+      <b-row>
+        <Scatter_3D
+          v-if="freq_status"
+          :key="String(this.scatter_3d_key) + 'scatter_3d'"
+          :verses_="this.displayable_verses"
+        ></Scatter_3D>
+      </b-row>
+
+      <b-row>
+        <Single_heatmap v-if="freq_status"
+        :key="String(this.heat_key) + 'heatmap_'"
+         :data_="this.filtered_data"
+        ></Single_heatmap>
       </b-row>
     </b-container>
   </div>
@@ -674,25 +710,22 @@ export default {
   overflow-y: scroll;
 }
 
-.il_coord{
+.il_coord {
   background-color: rgba(255, 0, 0, 0.301);
 }
-.il_subord{
-  background-color:rgba(0, 0, 255, 0.264);
+.il_subord {
+  background-color: rgba(0, 0, 255, 0.264);
 }
-#coord_{
+#coord_ {
   background-color: rgba(255, 0, 0, 0.15);
-  border:1px rgba(0, 0, 0, 0.392) solid
-  
-
+  border: 1px rgba(0, 0, 0, 0.392) solid;
 }
-#subord_{
-  background-color:rgba(0, 0, 255, 0.15);
-  border:1px rgba(0, 0, 0, 0.392) solid
-
+#subord_ {
+  background-color: rgba(0, 0, 255, 0.15);
+  border: 1px rgba(0, 0, 0, 0.392) solid;
 }
-#neutral_,#tot_{
-  border:1px rgba(0, 0, 0, 0.392) solid
-
+#neutral_,
+#tot_ {
+  border: 1px rgba(0, 0, 0, 0.392) solid;
 }
 </style>

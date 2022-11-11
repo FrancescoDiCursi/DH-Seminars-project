@@ -4,7 +4,7 @@ import * as plotly from "https://cdn.plot.ly/plotly-2.11.1.min.js";
 
 export default {
     name:'Rect_D3',
-    props:{data_:Array,legend_vals:Array},
+    props:{data_:Array},
     data(){
         return{
             coord_perc:0,
@@ -13,7 +13,8 @@ export default {
             subord_val:0,
             neutral_perc:0,
             neutral_val:0,
-            tot:100
+            tot:100,
+            legend_vals:[],
         }
     },
     mounted(){
