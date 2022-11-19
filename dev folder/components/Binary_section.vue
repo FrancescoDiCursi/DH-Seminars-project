@@ -9,6 +9,7 @@ export default {
   components: {Binary_Rect_D3},
   data() {
     return {
+      bind_scrollbar:false,
       temp_file_list: [],
       target_folder_1: "",
       target_folder_idx_1: "",
@@ -35,9 +36,10 @@ export default {
       rect_key: 0,
       col_target:'',
       folders: [
-        "Orthodox Jewish Version",
+        "Orthodox Jewish Bible",
         "Young's Literal Translation",
         "New World Translation",
+        "New Revised Standard Version"
       ],
       //target_files: "",
       files: [
@@ -248,6 +250,75 @@ export default {
           "65-Jude",
           "66-Revelation",
         ],
+        //New Revised Standard Version
+        [
+          "1-Genesis",
+          "2-Exodus",
+          "3-Leviticus",
+          "4-Numbers",
+          "5-Deuteronomy",
+          "6-Joshua",
+          "7-Judges",
+          "8-Ruth",
+          "9-1 Samuel",
+          "10-2 Samuel",
+          "11-1 Kings",
+          "12-2 Kings",
+          "13-1 Chronicles",
+          "14-2 Chronicles",
+          "15-Ezra",
+          "16-Nehemiah",
+          "17-Esther",
+          "18-Job",
+          "19-Psalms",
+          "20-Proverbs",
+          "21-Ecclesiastes",
+          "22-Song Of Songs",
+          "23-Isaiah",
+          "24-Jeremiah",
+          "25-Lamentations",
+          "26-Ezekiel",
+          "27-Daniel",
+          "28-Hosea",
+          "29-Joel",
+          "30-Amos",
+          "31-Obadiah",
+          "32-Jonah",
+          "33-Micah",
+          "34-Nahum",
+          "35-Habukkuk",
+          "36-Zephaniah",
+          "37-Haggai",
+          "38-Zechariah",
+          "39-Malachi",
+          "40-Matthew",
+          "41-Mark",
+          "42-Luke",
+          "43-John",
+          "44-Acts",
+          "45-Romans",
+          "46-1 Corinthians",
+          "47-2 Corinthians",
+          "48-Galatians",
+          "49-Ephesians",
+          "50-Philippians",
+          "51-Colossians",
+          "52-1 Thessalonians",
+          "53-2 Thessalonians",
+          "54-1 Timothy",
+          "55-2 Timothy",
+          "56-Titus",
+          "57-Philemon",
+          "58-Hebrews",
+          "59-James",
+          "60-1 Peter",
+          "61-2 Peter",
+          "62-1 John",
+          "63-2 John",
+          "64-3 John",
+          "65-Jude",
+          "66-Revelation",
+        ],
       
       ],
       coord_conj: ["for", "and", "but", "nor", "or", "yet", "so"],
@@ -316,6 +387,9 @@ export default {
     };
   },
   mounted() {
+
+
+
     Promise.all(this.folders.map((d) => d3.csv("./static/" + d + ".csv"))).then(
       (csvs) => {
         this.loaded_file.push(csvs[0]);
@@ -326,7 +400,20 @@ export default {
       }
     );
   },
+
+  
   methods: {
+    onScroll1(){
+      const box1 = document.querySelector('#verses_1')
+      const box2 = document.querySelector('#verses_2')
+      box2.scrollTop = box1.scrollTop
+    },
+    onScroll2(){
+      const box1 = document.querySelector('#verses_1')
+      const box2 = document.querySelector('#verses_2')
+      box1.scrollTop = box2.scrollTop
+    }
+    ,
     tokenize(displayable_verses) {
       //temp_text is for scatter
       var temp_text = displayable_verses.map((d) => d[2]).join(" "); //only verses
@@ -654,10 +741,11 @@ export default {
       <b-row>
      <Binary_Rect_D3  :key="String(this.rect_key)+'rect'" :data_="displayable_verses_1" :data_2="displayable_verses_2"></Binary_Rect_D3>
       </b-row>
+      <b-button v-model="bind_scrollbar" @click="bind_scrollbar= !bind_scrollbar" :class="bind_scrollbar==true ?'bind_btn_active' :'bind_btn'">{{bind_scrollbar==false ?'Bind scrollbars' :'Unbind scrollbars'}}</b-button>
       <b-row>
         
         <b-col>
-            <div id="verses_1">
+            <div id="verses_1" v-on:scroll.passive="bind_scrollbar==true ?onScroll1() :''">
           <b-list-group>
             <b-list-group-item
               :class="'il_'+displayable_verses_1[i][3]"
@@ -675,7 +763,7 @@ export default {
         </div>
         </b-col>
         <b-col>
-        <div id="verses_2">
+        <div id="verses_2"  v-on:scroll.passive="bind_scrollbar==true ?onScroll2() :''">
           <b-list-group>
             <b-list-group-item
               :class="'il_'+displayable_verses_2[i][3]"
@@ -709,4 +797,13 @@ export default {
   overflow-y: scroll;
 
     }
+    .bind_btn{
+      background-color: lightgray;
+      width: 100%;
+    }
+    .bind_btn_active{
+      background-color: orange;
+      width:100%;
+    }
+
 </style>

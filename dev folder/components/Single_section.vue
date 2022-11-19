@@ -14,6 +14,9 @@ export default {
   components: { Scatterplot_freq, Distplot_style, Scatter_3D, Rect_D3 ,Single_heatmap},
   data() {
     return {
+      show_selectors:true,
+      select_btn:false,
+      last_scroll_position:0,
       temp_file_list: [],
       target_folder: "",
       target_folder_idx: "",
@@ -38,9 +41,10 @@ export default {
       rect_key: 0,
       heat_key:0,
       folders: [
-        "Orthodox Jewish Version",
+        "Orthodox Jewish Bible",
         "Young's Literal Translation",
         "New World Translation",
+        "New Revised Standard Version"
       ],
       //target_files: "",
       files: [
@@ -251,6 +255,75 @@ export default {
           "65-Jude",
           "66-Revelation",
         ],
+        //New Revised Standard Version
+        [
+          "1-Genesis",
+          "2-Exodus",
+          "3-Leviticus",
+          "4-Numbers",
+          "5-Deuteronomy",
+          "6-Joshua",
+          "7-Judges",
+          "8-Ruth",
+          "9-1 Samuel",
+          "10-2 Samuel",
+          "11-1 Kings",
+          "12-2 Kings",
+          "13-1 Chronicles",
+          "14-2 Chronicles",
+          "15-Ezra",
+          "16-Nehemiah",
+          "17-Esther",
+          "18-Job",
+          "19-Psalms",
+          "20-Proverbs",
+          "21-Ecclesiastes",
+          "22-Song Of Songs",
+          "23-Isaiah",
+          "24-Jeremiah",
+          "25-Lamentations",
+          "26-Ezekiel",
+          "27-Daniel",
+          "28-Hosea",
+          "29-Joel",
+          "30-Amos",
+          "31-Obadiah",
+          "32-Jonah",
+          "33-Micah",
+          "34-Nahum",
+          "35-Habukkuk",
+          "36-Zephaniah",
+          "37-Haggai",
+          "38-Zechariah",
+          "39-Malachi",
+          "40-Matthew",
+          "41-Mark",
+          "42-Luke",
+          "43-John",
+          "44-Acts",
+          "45-Romans",
+          "46-1 Corinthians",
+          "47-2 Corinthians",
+          "48-Galatians",
+          "49-Ephesians",
+          "50-Philippians",
+          "51-Colossians",
+          "52-1 Thessalonians",
+          "53-2 Thessalonians",
+          "54-1 Timothy",
+          "55-2 Timothy",
+          "56-Titus",
+          "57-Philemon",
+          "58-Hebrews",
+          "59-James",
+          "60-1 Peter",
+          "61-2 Peter",
+          "62-1 John",
+          "63-2 John",
+          "64-3 John",
+          "65-Jude",
+          "66-Revelation",
+        ],
       ],
       coord_conj: ["for", "and", "but", "nor", "or", "yet", "so"],
       subord_conj: [
@@ -320,6 +393,9 @@ export default {
   mounted() {
     //this.target_folder=this.folders[0]
     //crea file unici su python, uno per ogni edizione al massimo, se non uno totale
+    window.addEventListener('scroll', this.onScroll)
+    
+
     Promise.all(this.folders.map((d) => d3.csv("./static/" + d + ".csv"))).then(
       (csvs) => {
         this.loaded_file.push(csvs[0]);
@@ -330,7 +406,11 @@ export default {
       }
     );
   },
+  beforeDestroy () {
+  window.removeEventListener('scroll', this.onScroll)
+},
   methods: {
+   
     manual_update(val) {
       val += 1;
       console.log(val);
@@ -568,6 +648,8 @@ export default {
     },
   },
 };
+
+var selectors=document.getElementById('selects_handler')
 </script>
     
     <template>
@@ -581,7 +663,8 @@ export default {
       <span v-else></span>
     </div>
     <b-container>
-      <b-row>
+      <b-button :class="select_btn===true ?'select_btn_active' :'select_btn'" @click="d=>{show_selectors= !show_selectors; select_btn= !select_btn} " v-model="select_btn">{{select_btn===false ?'Hide' :'Show'}} </b-button>
+      <b-row class="selects_handler" :class="{ 'selects_handler--hidden': !show_selectors}" v-model="show_selectors">
         <b-col cols="7">
           <b-form inline>
             <b-form-group>
@@ -698,6 +781,9 @@ export default {
 #book_selector {
   background-color: rgba(207, 0, 15, 0.5);
 }
+#folder_selector{
+  margin-left: 10rem;
+}
 
 .list_item:hover {
   background-color: rgba(241, 214, 147, 0.5);
@@ -727,5 +813,38 @@ export default {
 #neutral_,
 #tot_ {
   border: 1px rgba(0, 0, 0, 0.392) solid;
+}
+.selects_handler{
+  position:fixed;
+  z-index: 999;
+  background-color: whitesmoke;
+  width:71rem;
+  box-shadow: 0 2px 15px rgba(71, 120, 120, 0.5);
+  transform: translate3d(0, 0, 0);
+  transition: 0.1s all ease-out;
+  
+}
+
+.selects_handler.selects_handler--hidden {
+  display:none;
+  box-shadow: none;
+  transform:translate3d(0,-100%, 0)
+}
+.select_btn {
+  background-color: lightgray;
+  margin-left:-5rem;
+  position: fixed;
+}
+
+.select_btn_active {
+  background-color: orange;
+  margin-left:-5rem;
+  position: fixed;
+}
+
+
+
+#verses{
+  margin-top: 5rem;
 }
 </style>

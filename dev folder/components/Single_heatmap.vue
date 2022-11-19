@@ -11,6 +11,8 @@ export default {
       data_loaded: {},
       plot_option: "Blank",
       plot_options: ["Blank", "2D Heatmap", "3D Network"],
+      plot_type:'Entity-Entity',
+      plot_types:['Entity-Entity','Entity-concept']
     };
   },
   mounted() {
@@ -55,6 +57,10 @@ export default {
         div_.innerHTML = "";
       var names = this.data_loaded.map((d) => d["Proper nouns"]);
       var names_list = names.map((d) => d.split(";"));
+      //adding summaries
+      var summaries = this.data_loaded.map((d)=> d['Summary']);
+      var summaries_list=summaries.map(d=>d.split(';'))
+      //
       const isUpperCase = (string) => /^[A-Z]/.test(string);
       var names_list_temp = [];
       for (var i = 0; i < names_list.length; i++) {
@@ -75,12 +81,30 @@ export default {
         )
       ); //
       console.log(names_set);
+      //repeating for summaries
+      var summaries_list_temp = []
+      for (var i = 0; i < summaries_list.length; i++){
+        var temp=[]
+        for (var j = 0; j < summaries_list.length; j++) {
+          temp.push(summaries_list[i][j])
+      }
+      summaries_list_temp.push(temp)
+    }
+    summaries_list= summaries_list_temp
 
+    var summaries_set=[]
+    summaries_list.map(d=>
+    d.map(y=>!summaries_set.includes(y) ?summaries_set.push(y) :''))
+    //
       var name_counts = Object.fromEntries(names_set.map((k) => [k, []]));
       var single_name_counts = Object.fromEntries(names_set.map((k) => [k, 0]));
       var vals = [];
 
-      //single freq:
+      console.log(summaries_set)
+
+      
+
+      //single freq entity-entity:
       for (let i = 0; i < names_list.length; i++) {
         for (let j = 0; j < names_list[i].length; j++) {
           single_name_counts[names_list[i][j]] += 1;
@@ -106,6 +130,37 @@ export default {
         name_counts[names_set[i]].push(temp_l);
       }
       console.log(name_counts);
+
+      //single freq entity-concept
+      var summaries_counts = Object.fromEntries(summaries_set.map((k) => [k, []]));
+      var single_summary_counts = Object.fromEntries(summaries_set.map((k) => [k, 0]));
+      var vals_summaries = [];
+
+      for (let i = 0; i < summaries_list.length; i++) {
+        for (let j = 0; j < summaries_list[i].length; j++) {
+          single_summary_counts[summaries_list[i][j]] += 1;
+        }
+      }
+
+      for (let i = 0; i < summaries_set.length; i++) {
+        var temp_l = summaries_set.map((d) => 0);
+        for (let j = 0; j < names_set.length; j++) {
+         
+            for (let z = 0; z < summaries_list.length; z++) {
+              if (
+                names_list[z].includes(names_set[j]) &&
+                summaries_list[z].includes(summaries_set[i])
+              ) {
+                temp_l[j] += 1;
+              }
+            }
+          }
+          vals_summaries.push(temp_l);
+        summaries_counts[summaries_set[i]].push(temp_l);
+        }
+      console.log(summaries_counts)
+
+      //
 
       var links = [];
       var nodes = [];
@@ -141,7 +196,6 @@ export default {
       console.log(nodes, final_links);
 
     
-      //CONTINUE FROM HERE
       var link_sentiment= []
       var entity_sentiment=[]
 
@@ -180,14 +234,18 @@ export default {
       entity_sentiment_set.sort()
 
       console.log(entity_sentiment, link_sentiment)
+
+
       if (type === "2D Heatmap") {
         var vals_sqrd=vals.map(d=>d.map(y=>Math.sqrt(y)))
+        var y_ = ()=>this.plot_type==this.plot_types[0] ?names_set :summaries_set
+        var z_ = ()=>this.plot_type==this.plot_types[0] ?vals :vals_summaries
 
         var data = [
           {
-            z: vals, //vals_sqrd
+            z: z_(), //vals_sqrd
             x: names_set,
-            y: names_set,
+            y: y_(),
             type: "heatmap",
             hoveorongaps: false,
           },
@@ -300,7 +358,7 @@ export default {
       const forceNode = d3.forceManyBody();
       const forceLink = d3.forceLink(links).id(({ index: i }) => N[i]);
       if (nodeStrength !== undefined) forceNode.strength(-10).distanceMin(nodeStrength).distanceMax(nodeStrength*100);
-      if (linkStrength !== undefined) forceLink.distance(linkStrength);
+      if (linkStrength !== undefined) forceLink.distance(linkStrength)//.strength(0.2); //good also without strength
 
       const simulation = d3
         .forceSimulation(nodes)
@@ -487,10 +545,20 @@ export default {
     <b-row>
       <b-form-group v-slot="{ ariaDescribedby }">
         <b-form-radio-group
-          v-model="plot_option"
-          :options="plot_options"
+          v-model="plot_type"
+          :options="plot_types"
           :aria-describedby="ariaDescribedby"
-          name="radio-inline-scale"
+          name="radio-inline-scale_type"
+        ></b-form-radio-group>
+      </b-form-group>
+    </b-row>
+    <b-row>
+      <b-form-group v-slot="{ ariaDescribedby }">
+        <b-form-radio-group
+          v-model="plot_option"
+          :options="plot_type===plot_types[0] ?plot_options :['Blank','2D Heatmap']"
+          :aria-describedby="ariaDescribedby"
+          name="radio-inline-scale_plot"
         ></b-form-radio-group>
       </b-form-group>
     </b-row>
