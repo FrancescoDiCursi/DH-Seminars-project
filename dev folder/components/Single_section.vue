@@ -1,7 +1,7 @@
 <script>
 import Vue from "vue";
 
-import * as d3 from "https://cdn.skypack.dev/d3@7";
+import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7.7.0/+esm";
 import * as unique from "array-unique-deep";
 import Scatterplot_freq from "./Scatterplot_freq.vue";
 import Distplot_style from "./Distplot_style.vue";
@@ -27,6 +27,7 @@ export default {
       target_verse: "",
       target_verses: [],
       displayable_verses: [],
+      title_selection: '',
       token_list: [],
       badge_chaps: [],
       start_flag: false,
@@ -391,8 +392,7 @@ export default {
     };
   },
   mounted() {
-    //this.target_folder=this.folders[0]
-    //crea file unici su python, uno per ogni edizione al massimo, se non uno totale
+
     window.addEventListener('scroll', this.onScroll)
     
 
@@ -454,6 +454,8 @@ export default {
     },
 
     handle_verses() {
+      this.title_selection= this.target_folder +' - '+ this.target_file+' - '+this.target_chap+':'+this.target_verse
+      console.log(this.title_selection)
       this.freq_stats = false;
       this.displayable_verses = [];
       var temp_file =
@@ -718,6 +720,7 @@ var selectors=document.getElementById('selects_handler')
           v-if="freq_status"
           :key="String(this.rect_key) + 'rect'"
           :data_="displayable_verses"
+          :title_="title_selection"
         ></Rect_D3>
       </b-row>
       <b-row>
@@ -725,6 +728,7 @@ var selectors=document.getElementById('selects_handler')
           v-if="freq_status"
           :key="String(this.dist_plot_key) + 'dist'"
           :tokens_="this.grouped_tokens"
+          :title_="title_selection"
         ></Distplot_style>
       </b-row>
 
@@ -735,6 +739,7 @@ var selectors=document.getElementById('selects_handler')
           v-if="freq_status"
           :key="String(this.freq_plot_key) + 'freq'"
           :freq_="this.freq_"
+          :title_="title_selection"
         ></Scatterplot_freq>
       </b-row>
       
@@ -743,6 +748,7 @@ var selectors=document.getElementById('selects_handler')
           v-if="freq_status"
           :key="String(this.scatter_3d_key) + 'scatter_3d'"
           :verses_="this.displayable_verses"
+          :title_="title_selection"
         ></Scatter_3D>
       </b-row>
 
@@ -750,6 +756,7 @@ var selectors=document.getElementById('selects_handler')
         <Single_heatmap v-if="freq_status"
         :key="String(this.heat_key) + 'heatmap_'"
          :data_="this.filtered_data"
+         :title_="title_selection"
         ></Single_heatmap>
       </b-row>
     </b-container>

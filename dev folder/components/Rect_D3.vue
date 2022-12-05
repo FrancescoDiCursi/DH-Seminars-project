@@ -1,10 +1,10 @@
 <script>
-import * as d3 from "https://cdn.skypack.dev/d3@7";
+import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7.7.0/+esm";
 import * as plotly from "https://cdn.plot.ly/plotly-2.11.1.min.js";
 
 export default {
     name:'Rect_D3',
-    props:{data_:Array},
+    props:{data_:Array, title_:String},
     data(){
         return{
             coord_perc:0,
@@ -80,7 +80,7 @@ export default {
         }
         
         var layout={
-            title:'<b>Total: '+String(this.data_.length)+'</b>',
+            title:'<b>'+this.title_+'</b><br>Total: '+String(this.data_.length),
             barmode:'stack',
             annotations:[],
             //width:window.innerWidth/1.2,

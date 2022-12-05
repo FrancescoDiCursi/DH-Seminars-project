@@ -1,10 +1,10 @@
 <script>
 import * as plotly from "https://cdn.plot.ly/plotly-2.11.1.min.js";
-import * as d3 from "https://cdn.skypack.dev/d3@7";
+import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7.7.0/+esm";
 
 export default {
   name: "Single_heatmap.vue",
-  props: { data_: Array },
+  props: { data_: Array, title_:String },
   data() {
     return {
       plot_filter:Boolean,
@@ -252,6 +252,7 @@ export default {
         ];
 
         var layout = {
+          title: '<b>'+this.title_+'</b>',
           width: window.innerWidth / 2,
           height: window.innerHeight,
         };
@@ -268,162 +269,59 @@ export default {
 
 
         console.log(colormap(4));
-        var chart = this.ForceGraph(net_data, {
-          nodeId: (d) => d.id,
-          nodeGroups: entity_sentiment_set,
-          nodeGroup: (d,i) => entity_sentiment[i],// entity sentiment value ()
-          //nodeFill:(d,i)=>colormap(entity_sentiment[i]),
-          nodeStroke:(d,i)=>'white',
-          nodeTitle: (d,i) => `Entity: ${d.id}\nFrequency: ${d.size}\nSentiment:${entity_sentiment[i].toFixed(2)}`,
-          linkStrokeWidth: (l, i) => Math.sqrt(l.value),
-          linkStroke: (l, i) => colormap(link_sentiment[i]),//colormap(l.value), //link sentiment value ()
-          nodeRadius: (d, i) => Math.sqrt(node_sizes[i])*2,
-          linkStrength: (d,i)=>link_sentiment[i],
-          nodeStrength:(d,i)=>entity_sentiment[i],
-          node_sentiment_forces:entity_sentiment,
-        link_sentiment_forces: link_sentiment,
-        plot_filter: this.plot_filter,
-          width: window.innerWidth / 1.5,
-          height: window.innerHeight*2,
-          //invalidation // a promise to stop the simulation when the cell is re-run
-        });
-
-       
-        div_.appendChild(chart);
-      }
-    },
-    // Copyright 2021 Observable, Inc.
-    // Released under the ISC license.
-    // https://observablehq.com/@d3/force-directed-graph
-    ForceGraph(
-      {
-        nodes, // an iterable of node objects (typically [{id}, …])
-        links, // an iterable of link objects (typically [{source, target}, …])
-      },
-      {
-        nodeId = (d) => d.id, // given d in nodes, returns a unique identifier (string)
-        nodeGroup, // given d in nodes, returns an (ordinal) value for color
-        nodeGroups, // an array of ordinal values representing the node groups
-        nodeTitle, // given d in nodes, a title string
-        nodeFill , // node stroke fill (if not using a group color encoding)
-        nodeStroke ,// node stroke color
-        nodeStrokeWidth = 2, // node stroke width, in pixels
-        nodeStrokeOpacity = 0.6, // node stroke opacity
-        nodeRadius = 5, // node radius, in pixels
-        nodeStrength,
-        linkSource = ({ source }) => source, // given d in links, returns a node identifier string
-        linkTarget = ({ target }) => target, // given d in links, returns a node identifier string
-        linkStroke = "#999", // link stroke color
-        linkStrokeOpacity = 0.8, // link stroke opacity
-        linkStrokeWidth = 1.5, // given d in links, returns a stroke width in pixels
-        linkStrokeLinecap = "round", // link stroke linecap
-        linkStrength,
-        colors = ['blue','lightblue','rgba(237, 231, 225,1)','pink','red'], // an array of color strings, for the node groups,
-        node_sentiment_forces,
-        link_sentiment_forces,
-        plot_filter,
-        width = window.innerWidth, // outer width, in pixels
-        height = window.innerHeight, // outer height, in pixels
-        //invalidation, // when this promise resolves, stop the simulation
-      } = {}
-    ) {
-      // Compute values.
-      const N = d3.map(nodes, nodeId).map(intern);
-      const LS = d3.map(links, linkSource).map(intern);
-      const LT = d3.map(links, linkTarget).map(intern);
-      if (nodeTitle === undefined) nodeTitle = (_, i) => N[i];
-      const T = nodeTitle == null ? null : d3.map(nodes, nodeTitle);
-      const G = nodeGroup == null ? null : d3.map(nodes, nodeGroup).map(intern);
-      const W =
-        typeof linkStrokeWidth !== "function"
-          ? null
-          : d3.map(links, linkStrokeWidth);
-      const L =
-        typeof linkStroke !== "function" ? null : d3.map(links, linkStroke);
-
-      // Replace the input nodes and links with mutable objects for the simulation.
-      nodes = d3.map(nodes, (_, i) => ({ id: N[i] }));
-      links = d3.map(links, (_, i) => ({ source: LS[i], target: LT[i] }));
-
-      // Compute default domains.
-      if (G && nodeGroups === undefined) nodeGroups = d3.sort(G);
-
-      // Construct the scales.
-      const color = d3
-          .scaleLinear()
-          .domain([-1, -0.5,-0.25, 0, 0.25,0.5, 1])   //(([1, [...link_weights].sort().pop(-1)]) //retrieve sentiment values and insert them here
-          .range(['blue','lightblue','lightgreen','beige','pink','orange','red'])
-
-      // Construct the forces.
-      const forceNode = d3.forceManyBody();
-      const forceLink = d3.forceLink(links).id(({ index: i }) => N[i]);
-      if (nodeStrength !== undefined) forceNode.strength(-10).distanceMin(nodeStrength).distanceMax(nodeStrength*100);
-      if (linkStrength !== undefined) forceLink.distance(linkStrength)//.strength(0.2); //good also without strength
-
-      const simulation = d3
-        .forceSimulation(nodes)
-        .force("x", d3.forceX(width / 2))
-  .force("y", d3.forceY(height / 2))
-        .force("link", forceLink)
-        
-        .force("charge", forceNode)
-        .force("center", d3.forceCenter())
-        .force('collide',d3.forceCollide(20))
-       
-        .on("tick", ticked);
-
-      
-      const svg = d3
+       var  width = window.innerWidth ;
+        var  height= window.innerHeight*2;
+//
+const svg = d3
         .create("svg")
         .attr("width", width)
         .attr("height", height)
-        .attr("viewBox", [-width / 2, -height / 2, width, height])
+        .attr("viewBox", [0, 0, width, height])
         .attr("style", "max-width: 100%; height: auto; height: intrinsic;");
 
-      svg.append('rect')
+        svg.append('rect')
       .attr('stroke','rgba(0,0,0)')
       .attr('opacity',0.5)
       .attr('width','100%')
       .attr('height','100%')
       //.attr('fill','rba(0,0,0,0.5)')
-      .attr('x',-500)
-      .attr('y',-1000)
-
-      const link = svg
-        .append("g")
-        .attr("stroke", typeof linkStroke !== "function" ? linkStroke : null)
-        .attr("stroke-opacity", linkStrokeOpacity)
-        .attr(
-          "stroke-width",
-          typeof linkStrokeWidth !== "function" ? linkStrokeWidth : null
-        )
-        .attr("stroke-linecap", linkStrokeLinecap)
-        .selectAll("line")
-        .data(links)
-        .join("line")
-        .attr("class",'link')
+      .attr('x',0)
+      .attr('y',0)
+      
+var simulation = d3.forceSimulation()
+    .force("link", d3.forceLink().id(function(d) { return d.id; }))
+    .force("charge", d3.forceManyBody())
+    .force("center", d3.forceCenter(width / 2, height / 2))
+    .force('collide',d3.forceCollide(40))
 
 
-      const node = svg
-        .append("g")
-        .attr("fill", nodeFill)
-        .attr("stroke", 'white')
-        .attr("stroke-opacity", nodeStrokeOpacity)
-        .attr("stroke-width", nodeStrokeWidth)
-        .selectAll("circle")
-        .data(nodes)
-        .join("circle")
-        .attr('class','node')
-        .attr("r", nodeRadius)
-        .attr("opacity",1)
+
+  var link = svg.append("g")
+      .attr("class", "links")
+    .selectAll("line")
+    .data(net_data.links)
+    .enter().append("line")
+      .attr("stroke-width", function(d) { return d.value })
+      .attr('stroke',function(d,i){return colormap(link_sentiment[i])})
+
+  var node = svg.append("g")
+      .attr("class", "nodes")
+    .selectAll("g")
+    .data(net_data.nodes)
+    .enter().append("g")
+
+  var circles = node.append("circle")
+    .attr("r", (d,i)=>Math.sqrt(d.size)*5)
+    .attr("fill", function(d,i) { return colormap(entity_sentiment[i]); })
+    .attr("stroke",'black')
+    .attr("opacity",1)
         .on("click",function(event){
            //handle selection
           //links
-          this.plot_filter= !plot_filter
-          plot_filter=!plot_filter
-          console.log('click!',event, plot_filter)
+          this.plot_filter= !this.plot_filter
+          console.log('click!',event, this.plot_filter)
           var hidden_nodes=[]
-          d3.selectAll(".link")
+          d3.selectAll("line")
           .filter(function(d){
             console.log(d, event.target.__data__.id)
             var event_id=event.target.__data__.id
@@ -433,44 +331,129 @@ export default {
             }
             return (d.target.id!==event_id) //select all NON related links
           }).style("display",function (){
-            if(plot_filter===true){
+            if(this.plot_filter===true){
               return 'none'
             }else{
               return 'block'
             }
           })
-          console.log(event)
+          console.log(event,hidden_nodes)
         })
-       .call(drag(simulation))
+   
+    console.log(colormap(entity_sentiment[0]))
+  // Create a drag handler and append it to the node object instead
+  var drag_handler = d3.drag()
+      .on("start", dragstarted)
+      .on("drag", dragged)
+      .on("end", dragended);
 
-      
+  drag_handler(node);
 
-        //node.append("title").text(d=>d)
+  console.log(entity_sentiment)
+  
+  var lables = node.append("text")
+      .text(function(d) {
+        return d.id;
+      })
+      .attr('x', -15)
+      .attr('y', 10)
+      //.attr('stroke','white')
+      .attr('fill','black')
+      .style('font-size',function(d){return Math.sqrt(d.size)*7})
 
-      if (W) link.attr("stroke-width", ({ index: i }) => W[i]);
-      if (L) link.attr("stroke", ({ index: i }) => L[i]);
-      if (G) node.attr("fill", ({ index: i }) => color(G[i]));
-      if (T) node.append("title").text(({ index: i }) => T[i]);
-      //  if (invalidation != null) invalidation.then(() => simulation.stop());
+  node.append("title")
+      .text(function(d,i) { return `Entity: ${d.id}\nFrequency: ${d.size}\nSentiment:${entity_sentiment[i].toFixed(2)}` });
 
-      function intern(value) {
-        return value !== null && typeof value === "object"
-          ? value.valueOf()
-          : value;
-      }
+  simulation
+      .nodes(net_data.nodes)
+      .on("tick", ticked);
 
-      function ticked() {
-        link
-          .attr("x1", (d) => d.source.x)
-          .attr("y1", (d) => d.source.y)
-          .attr("x2", (d) => d.target.x)
-          .attr("y2", (d) => d.target.y);
+  simulation.force("link")
+      .links(net_data.links);
 
-        node.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
-      }
+  function ticked() {
+    link
+        .attr("x1", function(d) { return d.source.x; })
+        .attr("y1", function(d) { return d.source.y; })
+        .attr("x2", function(d) { return d.target.x; })
+        .attr("y2", function(d) { return d.target.y; });
 
-      function drag(simulation) {
+    node
+        .attr("transform", function(d) {
+          return "translate(" + d.x + "," + d.y + ")";
+        })
+  }
+
+
         function dragstarted(event) {
+          if (!event.active) simulation.alphaTarget(0.3).restart();
+          event.subject.fx = event.subject.x;
+          event.subject.fy = event.subject.y;
+
+          console.log(event.subject.id)
+          //handle selection
+          //links
+          var hidden_nodes=[]
+          d3.selectAll("line")
+          .filter(function(d){
+            console.log(d)
+            //return (d.source.id===event.subject.id) || (d.target.id===event.subject.id) //select all related links
+            if (d.target.id!==event.subject.id){
+              hidden_nodes.push(d.source.id)
+            }
+            return (d.target.id!==event.subject.id) //select all NON related links
+          }).style("opacity",0.1)
+
+         
+          var hidden_nodes=[]
+          d3.selectAll("text")
+          .filter(function(d){
+            console.log(d)
+            //return (d.source.id===event.subject.id) || (d.target.id===event.subject.id) //select all related links
+            if (d.target.id!==event.subject.id){
+              hidden_nodes.push(d.source.id)
+            }
+            return (d.target.id!==event.subject.id) //select all NON related links
+          }).style("opacity",0.1)
+          console.log(event.subject)
+         
+          console.log(event.subject)
+
+          console.log(hidden_nodes)
+        }
+
+        function dragged(event) {
+          event.subject.fx = event.x;
+          event.subject.fy = event.y;
+
+        }
+
+        function dragended(event) {
+          if (!event.active) simulation.alphaTarget(0);
+          event.subject.fx = null;
+          event.subject.fy = null;
+
+          //handle selection stop
+          d3.selectAll("line")
+          .filter(function(d){
+            console.log(d)
+            //return (d.source.id===event.subject.id) || (d.target.id===event.subject.id) //select all related links
+            return (d.target.id!==event.subject.id) //select all NON related links
+          }).style("opacity",0.8)
+          console.log(event.subject)
+
+          d3.selectAll("text")
+          .filter(function(d){
+            console.log(d)
+            //return (d.source.id===event.subject.id) || (d.target.id===event.subject.id) //select all related links
+            return (d.target.id!==event.subject.id) //select all NON related links
+          }).style("opacity",0.8)
+          console.log(event.subject)
+           
+        }
+
+        function drag(simulation){
+          function dragstarted(event) {
           if (!event.active) simulation.alphaTarget(0.3).restart();
           event.subject.fx = event.subject.x;
           event.subject.fy = event.subject.y;
@@ -518,17 +501,17 @@ export default {
            
         }
 
-        return d3
-          .drag()
-          .on("start", dragstarted)
-          .on("drag", dragged)
-          .on("end", dragended);
-      }
+        }
 
-      return Object.assign(svg.node(), { scales: {  } });
-    },
+ Object.assign(svg.node(), { scales: {  } });
+var title_el=document.createElement('p')
+title_el.innerHTML = '<b>'+this.title_+'</b>'  
+div_.appendChild(title_el)
+div_.appendChild(Object.assign(svg.node(), { scales: {  } }));
 
-  },
+    }
+
+  }},
   watch: {
     data_loaded: function () {
       this.draw(this.plot_option, false);

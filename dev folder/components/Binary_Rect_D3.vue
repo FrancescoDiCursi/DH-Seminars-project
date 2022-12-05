@@ -1,5 +1,5 @@
 <script>
-import * as d3 from "https://cdn.skypack.dev/d3@7";
+import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7.7.0/+esm";
 import * as plotly from "https://cdn.plot.ly/plotly-2.11.1.min.js";
 
 export default {

@@ -1,11 +1,11 @@
 <script>
 import arrayUniqueDeep from "array-unique-deep";
 import * as plotly from "https://cdn.plot.ly/plotly-2.11.1.min.js";
-import * as d3 from "https://cdn.skypack.dev/d3@7";
+import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7.7.0/+esm";
 
 export default {
   name: "Scatter_3D",
-  props: { verses_: Array },
+  props: { verses_: Array, title_:String },
   data() {
     return {
       coord_conj: ["for", "and", "but", "nor", "or", "yet", "so"],
@@ -82,7 +82,9 @@ export default {
       annot_status:'Show annots',
       annot_options:['Show annots','Hide annots'],
       scale_option:'Absolute values',
-      scale_options:['Absolute values','Scaled values']
+      scale_options:['Absolute values','Scaled values'],
+      mesh:'No mesh',
+      mesh_options:['No mesh','Apply mesh']
     };
   },
   mounted() {
@@ -393,17 +395,60 @@ export default {
           size: temp_data.map((d) => this.scale_option=='Scaled values' ?Math.sqrt(+d[4])*5 :+d[4]),
         },
       };
-      var trace2 = {
-        alphahull:9,
-        opacity: 0.03,
+
+      var mesh_coord= temp_data.filter(function(d){
+        if (d[3]==='1'){
+          return d
+        }
+      })
+      var mesh_subord= temp_data.filter(function(d){
+        if (d[3]==='-1'){
+          return d
+        }
+      })
+
+      var mesh_neutral= temp_data.filter(function(d){
+        if (d[3]==='0'){
+          return d
+        }
+      })
+      console.log(mesh_coord)
+      
+      var trace_mesh_coord = {
+        alphahull:15, //9
+        opacity: 0.3,//0.03,
         type: 'mesh3d',
-        x: x_,
-        y: y_,
-        z: z_,
+        x:mesh_coord.map(d=>d[0]),
+        y:mesh_coord.map(d=>d[1]),
+        z:mesh_coord.map(d=>d[2]),
+        color:'pink'
+        
+    };
+
+    var trace_mesh_subord = {
+        alphahull:15, //9
+        opacity: 0.3,//0.03,
+        type: 'mesh3d',
+        x:mesh_subord.map(d=>d[0]),
+        y:mesh_subord.map(d=>d[1]),
+        z:mesh_subord.map(d=>d[2]),
+        color:'lightblue'
+        
+    };
+
+    var trace_mesh_neutral = {
+        alphahull:15, //9
+        opacity: 0.3,//0.03,
+        type: 'mesh3d',
+        x:mesh_neutral.map(d=>d[0]),
+        y:mesh_neutral.map(d=>d[1]),
+        z:mesh_neutral.map(d=>d[2]),
+        color:'grey'
         
     };
 
       var layout = {
+        title:'<b>'+this.title_+'</b>',
         automargin:true,
         autosize: true,
         showscale:true,
@@ -470,7 +515,19 @@ export default {
       this.displayable_trigrams_temp=temp_disp_trigrams
       console.log( this.displayable_trigrams_temp)
 
-      Plotly.newPlot("scatter_3D_single", [trace1], layout); //trace 2, mesh, makes it crash
+      if (this.mesh==='No mesh'){
+        var traces_=[trace1]
+      }else if(this.mesh==='Apply mesh'){
+        if(this.filt_type==='All'){
+        var traces_=[trace1,trace_mesh_neutral,trace_mesh_coord,trace_mesh_subord]
+        }else if(this.filt_type==='Coord'){
+          var traces_=[trace1,trace_mesh_coord]
+        }else if(this.filt_type==='Subord'){
+          var traces_=[trace1,trace_mesh_subord]
+        }
+      }
+
+      Plotly.newPlot("scatter_3D_single", traces_, layout); //trace 2, mesh, makes it crash
 
       this.order_and_filter_list()
     },
@@ -539,6 +596,12 @@ export default {
     },
     scale_option: function(){
       this.draw_scatter()
+    },
+    mesh: function(){
+      if (this.mesh==='Apply mesh'){
+      alert("Using the mesh on the entier book could lead to crash!\n Ensure to use it only on chapters and verses.\n Otherwise, wait for results.")
+      }
+      this.draw_scatter()
     }
   },
 };
@@ -573,6 +636,17 @@ export default {
               :options="filt_options"
               :aria-describedby="ariaDescribedby"
               name="radio-inline"
+            ></b-form-radio-group>
+          </b-form-group>
+</b-row>
+
+<b-row>
+  <b-form-group v-slot="{ ariaDescribedby }">
+            <b-form-radio-group
+              v-model="mesh"
+              :options="mesh_options"
+              :aria-describedby="ariaDescribedby"
+              name="radio-inline-mesh"
             ></b-form-radio-group>
           </b-form-group>
 </b-row>

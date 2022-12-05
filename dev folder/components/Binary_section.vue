@@ -1,7 +1,7 @@
 <script>
 import Vue from "vue";
 import * as plotly from "https://cdn.plot.ly/plotly-2.11.1.min.js";
-import * as d3 from "https://cdn.skypack.dev/d3@7";
+import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7.7.0/+esm";
 import Binary_Rect_D3 from "./Binary_Rect_D3.vue";
 
 export default {

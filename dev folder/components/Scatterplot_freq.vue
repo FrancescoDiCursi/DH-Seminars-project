@@ -2,7 +2,7 @@
 import * as plotly from "https://cdn.plot.ly/plotly-2.11.1.min.js";
 export default {
   name: "Scatterplot_freq",
-  props: { freq_: Object },
+  props: { freq_: Object, title_:String},
   data() {
     return {
       x_: [],
@@ -222,6 +222,7 @@ var traces=[]
     }
       console.log(traces)
       var layout = {
+        title:'<b>'+this.title_+'</b>',
         yaxis:{
           categoryorder:'total descending'
         }

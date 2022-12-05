@@ -1,10 +1,10 @@
 <script>
 import * as plotly from "https://cdn.plot.ly/plotly-2.11.1.min.js";
-import * as d3 from "https://cdn.skypack.dev/d3@7";
+import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7.7.0/+esm";
 import { v4 as uuidv4 } from 'uuid'
 export default {
   name: "Distplot_style",
-  props: { tokens_: Array },
+  props: { tokens_: Array, title_: String },
   data() {
     return {
       coord_conj: ["for", "and", "but", "nor", "or", "yet", "so"],
@@ -185,6 +185,8 @@ export default {
 
         var layout = {
           height: 1000,
+          title: '<b>'+this.title_+'</b>',
+
         };
         Plotly.newPlot("distplot_style_single" + String(i), [trace1], layout);
 
