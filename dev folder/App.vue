@@ -10,7 +10,7 @@ import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
 import Single_section from './components/Single_section.vue';
 import Binary_section from './components/Binary_section.vue';
-import Multiple_section from './components/Multiple_section.vue'
+//import Multiple_section from './components/Multiple_section.vue'
 
 // Make BootstrapVue available throughout your project
 Vue.use(BootstrapVue)
@@ -19,7 +19,7 @@ Vue.use(IconsPlugin)
 
 export default {
   name:'App',
-  components:{ Single_section, Binary_section, Multiple_section },
+  components:{ Single_section, Binary_section },
   data(){
     return{
 
@@ -39,16 +39,10 @@ export default {
 
       if (this.target_page=='single'){
         this.binary=false
-        this.multiple=false
         this.single=true
       }else if (this.target_page=='binary'){
         this.single=false
-        this.multiple=false
         this.binary=true
-      }else if (this.target_page=='multiple'){
-        this.single=false
-        this.binary=false
-        this.multiple=true
       }
     }
 
@@ -72,8 +66,6 @@ export default {
       <b-navbar-nav>
         <b-nav-item id='single_btn' href="#" @click="update_page('single')">Single</b-nav-item>
         <b-nav-item id='binary_btn' href="#" @click="update_page('binary')" >Binary</b-nav-item>
-        <b-nav-item id='multiple_btn' href="#" @click="update_page('multiple')" >Multiple</b-nav-item>
-
       </b-navbar-nav>
 
     </b-collapse>
@@ -87,9 +79,7 @@ export default {
   <section id="binary" v-if="binary">
   <Binary_section></Binary_section>
   </section>
-  <section id="multiple" v-if="multiple">
-  <Multiple_section></Multiple_section>
-  </section>
+
 
 
   </div>
