@@ -714,7 +714,7 @@ var selectors=document.getElementById('selects_handler')
           </b-list-group>
         </div>
       </b-row>
-
+    <hr>
       <b-row>
         <Rect_D3
           v-if="freq_status"
@@ -723,6 +723,7 @@ var selectors=document.getElementById('selects_handler')
           :title_="title_selection"
         ></Rect_D3>
       </b-row>
+      <hr>
       <b-row>
         <Distplot_style
           v-if="freq_status"
@@ -731,9 +732,7 @@ var selectors=document.getElementById('selects_handler')
           :title_="title_selection"
         ></Distplot_style>
       </b-row>
-
-      
-
+      <hr>
       <b-row>
         <Scatterplot_freq
           v-if="freq_status"
@@ -742,7 +741,7 @@ var selectors=document.getElementById('selects_handler')
           :title_="title_selection"
         ></Scatterplot_freq>
       </b-row>
-      
+      <hr>
       <b-row>
         <Scatter_3D
           v-if="freq_status"
@@ -751,7 +750,7 @@ var selectors=document.getElementById('selects_handler')
           :title_="title_selection"
         ></Scatter_3D>
       </b-row>
-
+      <hr>
       <b-row>
         <Single_heatmap v-if="freq_status"
         :key="String(this.heat_key) + 'heatmap_'"
@@ -853,5 +852,9 @@ var selectors=document.getElementById('selects_handler')
 
 #verses{
   margin-top: 5rem;
+}
+
+hr{
+  border:1px solid grey !important
 }
 </style>
